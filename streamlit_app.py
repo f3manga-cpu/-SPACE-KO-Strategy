@@ -97,7 +97,7 @@ with col_right:
             eff_stack = st.number_input("Effective Stack (BB)", min_value=1.0, value=50.0)
             
             spr = eff_stack / pot_flop
-            st.metric("SPR", f"{spr:.2f}")
+            st.metric("🧩 SPR", f"{spr:.2f}")
             
             st.markdown("---")
             st.markdown("### 📐 Geometric Sizing")
