@@ -15,7 +15,7 @@ st.markdown("""
     .main { background-color: #0F172A; }
     div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
     /* Style for the expander headers to make them look like cards */
-    .stExpander { border: 1px solid #1E293B; background-color: #1E293B; border-radius: 8px; margin-bottom: 10px; }
+    .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
     .stExpander p { font-size: 1.2rem; font-weight: 600; }
     </style>
     """, unsafe_allow_html=True)
@@ -108,11 +108,11 @@ with col_right:
             
             st.markdown(f"**⏩ TURN All-In (2 Streets):**")
             st.markdown(f"**{geo_2:.1f}%** pot/street")
-            st.progress(min(geo_2/200, 1.0))
+           # st.progress(min(geo_2/200, 1.0))
             
             st.markdown(f"**⏩⏩ RIVER All-In (3 Streets):**")
             st.markdown(f"**{geo_3:.1f}%** pot/street")
-            st.progress(min(geo_3/200, 1.0))
+           # st.progress(min(geo_3/200, 1.0))
             
             if spr < 3:
                 st.success("🎯 **COMMITMENT ALERT:** Low SPR detected.")
