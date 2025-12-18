@@ -24,7 +24,7 @@ st.markdown("""
 with st.sidebar:
     st.header("🏆 Tournament Setup")
     st.markdown("---")
-    buy_in = st.number_input("Total Buy-in (€)", min_value=0.50, value=10.0, step=0.50)
+    buy_in = st.number_input("Total Buy-in (€)", min_value=0.50, value=10.0, step=5.0)
     starting_stack = st.number_input("Starting Stack (Chips)", min_value=1, value=20000, step=1000)
     
     # Bounty Pool Calculation
@@ -45,7 +45,7 @@ with col_left:
         st.markdown("## ⚖️ Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
-            current_bb = st.number_input("🪙 Current Big Blind (Chips)", min_value=1, value=1000, step=100)
+            current_bb = st.number_input("🪙 Current Big Blind (Chips)", min_value=1, value=200, step=100)
         with c2:
             current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
