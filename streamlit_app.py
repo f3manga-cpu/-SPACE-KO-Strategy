@@ -28,7 +28,7 @@ with st.sidebar:
     starting_stack = st.number_input("Starting Stack (Chips)", min_value=1, value=20000, step=1000)
     
     # Bounty Pool Calculation
-    bounty_pool = buy_in * 0.50
+    bounty_pool = buy_in * 0.9
     chip_value_euro = bounty_pool / starting_stack
     
     st.info(f"Value: 1000 chips = €{chip_value_euro * 1000:.4f}")
@@ -49,7 +49,7 @@ with col_left:
         with c2:
             current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
-        bounty_in_chips = current_bounty / chip_value_euro *0.5
+        bounty_in_chips = (current_bounty / chip_value_euro) *0.5
         bounty_bb = bounty_in_chips / current_bb
         
         if bounty_bb > 8:
