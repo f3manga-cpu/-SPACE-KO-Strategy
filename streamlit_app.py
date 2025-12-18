@@ -3,8 +3,8 @@ import math
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="SPACE KO Strategy Coach",
-    page_icon="💰",
+    page_title="SPACE KO Strategy App",
+    page_icon="🛸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -21,7 +21,7 @@ st.markdown("""
 
 # --- SIDEBAR: TOURNAMENT SETUP ---
 with st.sidebar:
-    st.header("🎮 Tournament Setup")
+    st.header("🏆 Tournament Setup")
     st.markdown("---")
     buy_in = st.number_input("Total Buy-in (€)", min_value=0.50, value=10.0, step=0.50)
     starting_stack = st.number_input("Starting Stack (Chips)", min_value=1, value=20000, step=1000)
@@ -33,7 +33,7 @@ with st.sidebar:
     st.info(f"Tournament Value: 1000 chips = €{chip_value_euro * 1000:.4f}")
 
 # --- APP HEADER ---
-st.title("🚀 SPACE KO In-Game Coach")
+st.title("🛸 SPACE KO In-Game Tool")
 
 # --- MAIN LAYOUT ---
 col_left, col_right = st.columns([3, 2], gap="large")
@@ -41,7 +41,7 @@ col_left, col_right = st.columns([3, 2], gap="large")
 with col_left:
     # --- SECTION 1: BOUNTY CONVERTER ---
     with st.container(border=True):
-        st.markdown("## 💰 Bounty Value Converter")
+        st.markdown("## 🚀 Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
             current_bounty = st.number_input("Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
@@ -74,7 +74,7 @@ with col_left:
 
     # --- SECTION 2: PRE-FLOP ADVISOR ---
     with st.container(border=True):
-        st.markdown("## 🤔 Pre-Flop Call Advisor")
+        st.markdown("## 📊 Pre-Flop Call Advisor")
         
         if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
             c1, c2 = st.columns(2)
@@ -109,7 +109,7 @@ with col_left:
 with col_right:
     # --- SECTION 3: POST-FLOP PLANNING ---
     with st.container(border=True):
-        st.markdown("## 📐 Post-Flop Planner")
+        st.markdown("## ♠️❤️ Post-Flop Planner")
         
         pot_flop = st.number_input("Current Pot (BB)", min_value=1.0, value=10.0)
         eff_stack = st.number_input("Effective Stack (BB)", min_value=1.0, value=50.0)
@@ -118,7 +118,7 @@ with col_right:
         st.metric("SPR (Stack-to-Pot Ratio)", f"{spr:.2f}")
         
         st.markdown("---")
-        st.markdown("### Geometric Sizing")
+        st.markdown("### 📐 Geometric Sizing")
         
         # Geometric Growth Formulas
         # 2 Streets (Turn-River): Pot * (1+x)^2 = Pot + Stack -> (1+x) = sqrt((Pot+Stack)/Pot)
