@@ -42,12 +42,12 @@ col_left, col_right = st.columns([3, 2], gap="large")
 with col_left:
     # --- SECTION 1: BOUNTY CONVERTER (Always Visible) ---
     with st.container(border=True):
-        st.markdown("## 🎯 Bounty Value Converter")
+        st.markdown("## ⚖️ Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
-            current_bounty = st.number_input("Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
+            current_bb = st.number_input("🪙 Current Big Blind (Chips)", min_value=1, value=1000, step=100)
         with c2:
-            current_bb = st.number_input("Current Big Blind (Chips)", min_value=1, value=1000, step=100)
+            current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
         bounty_in_chips = current_bounty / chip_value_euro
         bounty_bb = bounty_in_chips / current_bb
