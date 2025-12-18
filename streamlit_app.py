@@ -49,7 +49,7 @@ with col_left:
         with c2:
             current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
-        bounty_in_chips = current_bounty / chip_value_euro
+        bounty_in_chips = current_bounty / chip_value_euro *0.5
         bounty_bb = bounty_in_chips / current_bb
         
         if bounty_bb > 8:
