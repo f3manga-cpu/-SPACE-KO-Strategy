@@ -19,7 +19,7 @@ st.markdown("""
     /* 1. Neutral 'Reference' Box (Standard) */
     .neutral-metric-box {
         background-color: #1E293B;
-        padding: 12px;
+        padding: 10px;
         border-radius: 8px;
         text-align: center;
         border: 1px dashed #475569;
@@ -41,7 +41,7 @@ st.markdown("""
     /* 2. Hero 'Bounty' Box (The Focus) */
     .bounty-metric-box {
         background-color: #064E3B; /* Deep Forest Green background */
-        padding: 16px;
+        padding: 12px;
         border-radius: 8px;
         text-align: center;
         border: 2px solid #22C55E; /* Bright Green border */
@@ -70,7 +70,7 @@ st.markdown("""
 
     /* 3. Bounty BB & SPR Dynamic Boxes */
     .metric-card {
-        padding: 15px;
+        padding: 10px;
         border-radius: 10px;
         text-align: center;
         margin-bottom: 10px;
