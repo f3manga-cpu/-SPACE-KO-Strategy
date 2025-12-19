@@ -21,6 +21,12 @@ st.markdown("""
         color: #22C55E ;
         font-weight: 700 ;
     }
+
+    .neutral-box div[data-testid="stMetricValue"] {
+        color: #94A3B8 !important;
+        font-weight: 400 !important;
+        font-size: 28px !important;
+    }
     
     /* Style for the expander headers to make them look like cards */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
@@ -86,8 +92,12 @@ with col_left:
                     total_pot_ko = total_pot_standard + st.session_state.bounty_bb
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
+                    
+                    st.markdown('<div class="neutral-box">', unsafe_allow_html=True)
+                    st.metric("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-                    st.metric("Standard Equity %", f"{eq_std:.1f}%")
+                    
                     st.metric("🟢 With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
