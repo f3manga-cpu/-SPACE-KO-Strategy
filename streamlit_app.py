@@ -19,7 +19,7 @@ st.markdown("""
     /* 1. Neutral 'Reference' Box (Standard) */
     .neutral-metric-box {
         background-color: #1E293B;
-        padding: 15px;
+        padding: 12px;
         border-radius: 8px;
         text-align: center;
         border: 1px dashed #475569;
@@ -41,7 +41,7 @@ st.markdown("""
     /* 2. Hero 'Bounty' Box (The Focus) */
     .bounty-metric-box {
         background-color: #064E3B; /* Deep Forest Green background */
-        padding: 20px;
+        padding: 16px;
         border-radius: 8px;
         text-align: center;
         border: 2px solid #22C55E; /* Bright Green border */
@@ -186,7 +186,7 @@ with col_left:
 
         # Dynamic Color Logic
         if bounty_bb > 8:
-            bg, txt, lbl = "#42210B", "#FDBA74", "🚀 HIGH VALUE" # Gold/Orange
+            bg, txt, lbl = "#064E3B", "#22C55E", "🚀 HIGH VALUE" # Gold/Orange
         elif bounty_bb >= 3:
             bg, txt, lbl = "#064E3B", "#22C55E", "✅ SIGNIFICANT" # Green
         else:
@@ -238,7 +238,7 @@ with col_left:
 
                 # Summary Alerts
                 if reduction > 7:
-                    st.success(f"💎**HUGE VALUE!**💎 required equity drops by **{reduction:.1f}%**.")
+                    st.success(f"💎 **HUGE VALUE!** 💎 required equity drops by **{reduction:.1f}%**.")
                 elif reduction > 3:
                     st.info(f"**Impact:** Notable bounty incentive.")
             else:
