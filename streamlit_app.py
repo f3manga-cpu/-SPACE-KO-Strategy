@@ -102,7 +102,7 @@ with col_left:
                     reduction = equity_standard - equity_ko
                     
                     st.markdown('<div class="neutral-box">', unsafe_allow_html=True)
-                    st.metric("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.metric(label=f"Standard Equity %  ({label})", value=f"{equity_standard:.1f}%")
                     st.markdown('</div>', unsafe_allow_html=True)
 
                     
