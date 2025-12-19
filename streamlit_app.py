@@ -13,18 +13,19 @@ st.set_page_config(
 st.markdown("""
     <style>
     .main { background-color: #0F172A; }
- 
-div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
     
-    /* Neutral Metric Style (Silver/Gray, not bold) */
-    [data-testid="stMetric"][data-testid="neutral-metric"] div[data-testid="stMetricValue"] {
-        color: #94A3B8 !important; /* Slate 400 (Silver/Gray) */
-        font-weight: 400 !important;
-        font-size: 32px !important;
-    }
+    .main p { font-size: 1.2rem; font-weight: 600; }
+    
+    div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
+    
+    [data-testid="stMetric"][data-testid="neutral-metric"] div[data-testid="stMetricValue"] 
+    { color: #94A3B8 !important; font-weight: 400 !important; font-size: 32px !important; }
+        
+    st.sidebar p { font-size: 1.2rem; font-weight: 600; }
     
     /* Style for the expander headers to make them look like cards */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
+    .stExpander p { font-size: 1.2rem; font-weight: 600; }
     </style>
     """, unsafe_allow_html=True)
 
