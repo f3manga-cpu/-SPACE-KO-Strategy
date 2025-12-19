@@ -12,17 +12,50 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for polished typography
+# Custom CSS for polished typography and specific metric targeting
 st.markdown("""
-   <style>
+    <style>
     .main { background-color: #0F172A; }
-    [data-testid="stMetricValue"] > div { color: #22C55E !important; font-weight: 700 !important; }
-    .neutral-box [data-testid="stMetricValue"] > div { color: #94A3B8 !important; }
+    
+    /* 1. Global Metric Label Styling */
+    [data-testid="stMetricLabel"] {
+        font-size: 14px;
+        color: #94A3B8; /* Muted slate for labels */
+    }
+
+    /* 2. Target ONLY the main metrics for the Green Pop */
+    /* We use a specific attribute selector or just rely on the fact 
+       that we will use HTML for the "neutral" ones */
+    [data-testid="stMetricValue"] > div {
+        color: #22C55E !important; /* Winamax Green */
+        font-weight: 800 !important;
+        font-size: 36px !important;
+    }
+
+    /* 3. Custom 'Neutral' Metric Class for Standard Equity */
+    .neutral-metric-box {
+        background-color: #1E293B;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px dashed #475569;
+    }
+    .neutral-value {
+        font-size: 24px;
+        font-weight: 500;
+        color: #94A3B8; /* Gray/Silver */
+    }
+    .neutral-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748B;
+    }
+
+    /* Expander Styling */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
-    /* Success/Fail coloring for the logger feedback */
-    .log-success { color: #22C55E; font-weight: bold; }
-   </style>
-   """, unsafe_allow_html=True)
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- FILE HANDLING: CSV TRACKER ---
 LOG_FILE = "space_ko_session_log.csv"
@@ -47,9 +80,9 @@ init_log_file()
 
 # --- SIDEBAR: TOURNAMENT & TRACKER ---
 with st.sidebar:
-    st.header("🏆 Setup & Tracker")
+    st.header("⚙️ Setup & Tracker")
     
-    with st.expander("⚙️ Tournament Config", expanded=True):
+    with st.expander("🏆 Tournament Config", expanded=True):
         buy_in = st.number_input("Total Buy-in (€)", min_value=0.50, value=10.0, step=5.0)
         starting_stack = st.number_input("Starting Stack", value=20000, step=1000)
         # Bounty Pool Calculation (Space KO specific)
@@ -131,7 +164,7 @@ with col_left:
 
     st.markdown(" ") 
 
-    # --- SECTION 2: PRE-FLOP ODDS ---
+# --- SECTION 2: PRE-FLOP ODDS ---
     with st.container(border=True):
         with st.expander("## 📊 Pre-Flop Odds", expanded=True):
             if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
@@ -139,24 +172,41 @@ with col_left:
                 with c1:
                     pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=1.0, value=2.5)
                     shove_size_bb = st.number_input("⚔️ Villain Shove (BB)", min_value=0.5, value=15.0)
+                
                 with c2:
-                    # Standard Pot Odds
+                    # Calculations
                     total_pot_standard = pot_size_bb + (shove_size_bb * 2)
                     equity_standard = (shove_size_bb / total_pot_standard) * 100
                     
-                    # KO Pot Odds (The Pot is effectively larger by the bounty amount)
                     total_pot_ko = total_pot_standard + st.session_state.bounty_bb
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     
                     reduction = equity_standard - equity_ko
                     
-                    st.metric("Standard Equity Req", f"{equity_standard:.1f}%")      
-                    st.metric("💸 With Bounty Req", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}% req", delta_color="inverse")
+                    # --- NEW VISUAL LAYOUT ---
+                    # Row 1: The Neutral 'Reference' Box
+                    st.markdown(f"""
+                        <div class="neutral-metric-box">
+                            <div class="neutral-label">Standard Required Equity</div>
+                            <div class="neutral-value">{equity_standard:.1f}%</div>
+                        </div>
+                        <div style="text-align: center; color: #64748B; font-size: 20px; margin: 5px 0;">⬇</div>
+                    """, unsafe_allow_html=True)
 
+                    # Row 2: The Hero Metric (With Bounty)
+                    # We use standard st.metric here because our CSS forces it to be Green & Bold
+                    st.metric(
+                        label="🚀 WITH BOUNTY", 
+                        value=f"{equity_ko:.1f}%", 
+                        delta=f"-{reduction:.1f}%", 
+                        delta_color="inverse"
+                    )
+
+                # Logic for messages remains the same
                 if reduction > 7:
-                    st.success(f"**CALL WIDER! 🚀** Equity needed drops by **{reduction:.1f}%**.")
+                    st.success(f"✅ **HUGE VALUE!** ✅ Drop requirements by **{reduction:.1f}%**.")
                 elif reduction > 3:
-                    st.info(f"**Impact:** Equity needed drops by **{reduction:.1f}%**.")
+                    st.info(f"**Impact:** Drop requirements by **{reduction:.1f}%**.")
             else:
                 st.warning("Enter bounty details above to unlock.")
 
@@ -179,10 +229,10 @@ with col_right:
             # 3 Streets (Flop, Turn, River shove)
             geo_3 = (math.pow((pot_flop + eff_stack) / pot_flop, 1/3) - 1) * 100
             
-            st.info(f"**2-Street Shove:** Bet **{geo_2:.0f}%** Pot")
-            st.caption(f"Bet Turn {geo_2:.0f}%, River Shove")
+            st.info(f"👽 **2-Street Shove:** Bet **{geo_2:.0f}%** Pot")
+            st.caption(f"Bet Flop {geo_2:.0f}%, Turn Shove")
             
-            st.info(f"**3-Street Shove:** Bet **{geo_3:.0f}%** Pot")
+            st.info(f"🤑 **3-Street Shove:** Bet **{geo_3:.0f}%** Pot")
             st.caption(f"Bet Flop {geo_3:.0f}%, Turn {geo_3:.0f}%, River Shove")
 
 # --- DATA VIEW (Bottom) ---
