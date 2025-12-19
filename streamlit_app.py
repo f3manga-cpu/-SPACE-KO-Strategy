@@ -19,12 +19,12 @@ st.markdown("""
 /* 4. Premium Title Design */
     .title-container {
         background: linear-gradient(90deg, #0F172A 0%, #1E293B 100%);
-        padding: 15px;
+        padding: 12px;
         border-radius: 15px;
         border: 2px solid #22C55E;
         border-left: 10px solid #22C55E; /* Accent bar */
         box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
