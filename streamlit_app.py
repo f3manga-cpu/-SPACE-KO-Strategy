@@ -23,7 +23,7 @@ st.markdown("""
         border-radius: 8px;
         text-align: center;
         border: 1px dashed #475569;
-        margin-bottom: 13px;
+        margin-bottom: 10px;
     }
     .neutral-value {
         font-size: 22px;
@@ -177,9 +177,9 @@ with col_left:
         st.markdown("## 🧮 Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
-            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100.0, value=200.0, step=100.0)
+            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100, value=200, step=100)
         with c2:
-            current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.5, value=5.0, step=1.0)
+            current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
         bounty_in_chips = (current_bounty / chip_value_euro) * 0.5
         bounty_bb = bounty_in_chips / current_bb
@@ -206,8 +206,8 @@ with col_left:
             if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
                 c1, c2 = st.columns(2)
                 with c1:
-                    pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=1.0, value=2.1)
-                    shove_size_bb = st.number_input("⚔️ Villain Shove (BB)", min_value=0.5, value=100)
+                    pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=1.0, value=2.5)
+                    shove_size_bb = st.number_input("⚔️ Villain Shove (BB)", min_value=0.5, value=15.0)
                 
                 with c2:
                     # Calculations
@@ -251,7 +251,7 @@ with col_right:
     with st.container(border=True):
         with st.expander("## ♠️❤️ Post-Flop", expanded=True):
             pot_flop = st.number_input("💰 Flop Pot (BB)", min_value=1.0, value=10.0)
-            eff_stack = st.number_input("🛡️ Eff. Stack (BB)", min_value=1.0, value=70.0)
+            eff_stack = st.number_input("🛡️ Eff. Stack (BB)", min_value=1.0, value=40.0)
             
             spr = eff_stack / pot_flop
             
