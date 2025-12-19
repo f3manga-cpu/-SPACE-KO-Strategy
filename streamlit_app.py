@@ -12,48 +12,61 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for polished typography and specific metric targeting
 st.markdown("""
     <style>
     .main { background-color: #0F172A; }
     
-    /* 1. Global Metric Label Styling */
-    [data-testid="stMetricLabel"] {
-        font-size: 14px;
-        color: #94A3B8; /* Muted slate for labels */
-    }
-
-    /* 2. Target ONLY the main metrics for the Green Pop */
-    /* We use a specific attribute selector or just rely on the fact 
-       that we will use HTML for the "neutral" ones */
-    [data-testid="stMetricValue"] > div {
-        color: #22C55E !important; /* Winamax Green */
-        font-weight: 800 !important;
-        font-size: 36px !important;
-    }
-
-    /* 3. Custom 'Neutral' Metric Class for Standard Equity */
+    /* 1. Neutral 'Reference' Box (Standard) */
     .neutral-metric-box {
         background-color: #1E293B;
-        padding: 10px;
+        padding: 15px;
         border-radius: 8px;
         text-align: center;
         border: 1px dashed #475569;
+        margin-bottom: 10px;
     }
     .neutral-value {
-        font-size: 24px;
-        font-weight: 500;
-        color: #94A3B8; /* Gray/Silver */
+        font-size: 22px;
+        font-weight: 400;
+        color: #94A3B8; 
     }
     .neutral-label {
-        font-size: 12px;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 1px;
         color: #64748B;
+        margin-bottom: 5px;
+    }
+
+    /* 2. Hero 'Bounty' Box (The Focus) */
+    .bounty-metric-box {
+        background-color: #064E3B; /* Deep Forest Green background */
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        border: 2px solid #22C55E; /* Bright Green border */
+    }
+    .bounty-value {
+        font-size: 38px;
+        font-weight: 800;
+        color: #22C55E; /* Winamax Green */
+    }
+    .bounty-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        color: #A7F3D0;
+    }
+    .bounty-delta {
+        font-size: 14px;
+        font-weight: 600;
+        color: #A7F3D0;
+        margin-top: 5px;
     }
 
     /* Expander Styling */
-    .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
+    .stExpander { border: 1px solid #1E293B; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -183,30 +196,29 @@ with col_left:
                     
                     reduction = equity_standard - equity_ko
                     
-                    # --- NEW VISUAL LAYOUT ---
-                    # Row 1: The Neutral 'Reference' Box
+                    # --- CLEAN BOXED LAYOUT ---
+                    # 1. The Neutral Box (Standard)
                     st.markdown(f"""
                         <div class="neutral-metric-box">
-                            <div class="neutral-label">Standard Required Equity</div>
+                            <div class="neutral-label">Standard Equity </div>
                             <div class="neutral-value">{equity_standard:.1f}%</div>
                         </div>
-                        <div style="text-align: center; color: #64748B; font-size: 20px; margin: 5px 0;">⬇</div>
                     """, unsafe_allow_html=True)
 
-                    # Row 2: The Hero Metric (With Bounty)
-                    # We use standard st.metric here because our CSS forces it to be Green & Bold
-                    st.metric(
-                        label="🚀 WITH BOUNTY", 
-                        value=f"{equity_ko:.1f}%", 
-                        delta=f"-{reduction:.1f}%", 
-                        delta_color="inverse"
-                    )
+                    # 2. The Hero Box (With Bounty)
+                    st.markdown(f"""
+                        <div class="bounty-metric-box">
+                            <div class="bounty-label">🚀 With Bounty </div>
+                            <div class="bounty-value">{equity_ko:.1f}%</div>
+                            <div class="bounty-delta">-{reduction:.1f}% Difference</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                # Logic for messages remains the same
+                # Summary Alerts
                 if reduction > 7:
-                    st.success(f"✅ **HUGE VALUE!** ✅ Drop requirements by **{reduction:.1f}%**.")
+                    st.success(f"💎**HUGE VALUE!**💎 required equity drops by **{reduction:.1f}%**.")
                 elif reduction > 3:
-                    st.info(f"**Impact:** Drop requirements by **{reduction:.1f}%**.")
+                    st.info(f"**Impact:** Notable bounty incentive.")
             else:
                 st.warning("Enter bounty details above to unlock.")
 
