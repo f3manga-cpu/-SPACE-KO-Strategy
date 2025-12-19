@@ -41,10 +41,10 @@ st.markdown("""
     /* 2. Hero 'Bounty' Box (The Focus) */
     .bounty-metric-box {
         background-color: #064E3B; /* Deep Forest Green background */
-        padding: 12px;
+        padding: 11px;
         border-radius: 8px;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 13px;
         border: 2px solid #22C55E; /* Bright Green border */
     }
     .bounty-value {
@@ -126,8 +126,8 @@ with st.sidebar:
         st.caption(f"1k Chips ≈ €{chip_value_euro * 1000:.2f}")
 
     st.markdown("---")
-    st.subheader("📝 Hand Logger")
     
+    with st.expander("📝 Hand Logger", expanded=True):    
     with st.form("session_log_form", clear_on_submit=True):
         st.caption("Log key hands to track ROI & RNG")
         
