@@ -101,12 +101,8 @@ with col_left:
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
                     
-                    st.markdown('<div class="neutral-box">', unsafe_allow_html=True)
-                    st.metric(label=f"Standard Equity %  ({label})", value=f"{equity_standard:.1f}%")
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-                    
-                    st.metric("🟢 With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
+                    st.metric("Standard Equity %",f"{equity_standard:.1f}%")      
+                    st.metric("💸 With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
                     st.success(f"**CALL WIDER! 💚** Equity requirement drops by **{reduction:.1f}%**.")
