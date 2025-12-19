@@ -33,8 +33,8 @@ st.markdown("""
         color: #FFFFFF;
         font-family: 'Inter', sans-serif;
         margin: 0;
-        font-size: 36px;
-        font-weight: 800;
+        font-size: 32px;
+        font-weight: 700;
         letter-spacing: -1px;
     }
     .title-icon {
@@ -207,7 +207,7 @@ with st.sidebar:
 st.markdown("""
     <div class="title-container">
         <div>
-            <h1 class="title-text"> 🛸 SPACE KO 🛸 Token Buster App 📟</h1>
+            <h1 class="title-text"> 🛸 SPACE KO Token App </h1>
             <div class="subtitle-text">Bust them up & Collect Tokens</div>
         </div>
     </div>
