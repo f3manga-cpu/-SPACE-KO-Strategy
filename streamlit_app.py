@@ -67,6 +67,27 @@ st.markdown("""
 
     /* Expander Styling */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; }
+
+    /* 3. Bounty BB & SPR Dynamic Boxes */
+    .metric-card {
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .value-bold {
+        font-size: 32px;
+        font-weight: 850;
+        display: block;
+    }
+    .label-caps {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 4px;
+        display: block;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -150,32 +171,33 @@ st.title("🛸 SPACE KO In-Game Tool")
 col_left, col_right = st.columns([3, 2], gap="large")
 
 with col_left:
-    # --- SECTION 1: BOUNTY CONVERTER ---
+   # --- SECTION 1: BOUNTY CONVERTER ---
     with st.container(border=True):
         st.markdown("## 🧮 Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
-            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100, value=400, step=100)
+            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100, value=200, step=100)
         with c2:
             current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=0.5)
         
-        # Math: Space KO credits 50% to balance, 50% to token.
-        # Immediate value is the cash part + equity of increasing own token.
-        # Simplified: We treat the full face value as the incentive for calculations.
         bounty_in_chips = (current_bounty / chip_value_euro) * 0.5
         bounty_bb = bounty_in_chips / current_bb
-        
-        if bounty_bb > 8:
-            label, msg_type = "HIGH VALUE 🚀", "success"
-        elif bounty_bb >= 3:
-            label, msg_type = "Significant", "info"
-        else:
-            label, msg_type = "Standard", "secondary"
-
-        st.metric(label=f"⚖️ Bounty Value (BB) ({label})", value=f"{bounty_bb:.2f} BB")
         st.session_state.bounty_bb = bounty_bb
 
-    st.markdown(" ") 
+        # Dynamic Color Logic
+        if bounty_bb > 8:
+            bg, txt, lbl = "#42210B", "#FDBA74", "🚀 HIGH VALUE" # Gold/Orange
+        elif bounty_bb >= 3:
+            bg, txt, lbl = "#064E3B", "#22C55E", "✅ SIGNIFICANT" # Green
+        else:
+            bg, txt, lbl = "#1E293B", "#94A3B8", "⚖️ STANDARD"    # Gray
+
+        st.markdown(f"""
+            <div class="metric-card" style="background-color: {bg}; border: 1px solid {txt}44;">
+                <span class="label-caps" style="color: {txt};">{lbl}</span>
+                <span class="value-bold" style="color: {txt};">{bounty_bb:.2f} BB</span>
+            </div>
+        """, unsafe_allow_html=True)
 
 # --- SECTION 2: PRE-FLOP ODDS ---
     with st.container(border=True):
@@ -223,6 +245,7 @@ with col_left:
                 st.warning("Enter bounty details above to unlock.")
 
 with col_right:
+
     # --- SECTION 3: POST-FLOP ---
     with st.container(border=True):
         with st.expander("## ♠️❤️ Post-Flop", expanded=True):
@@ -230,7 +253,24 @@ with col_right:
             eff_stack = st.number_input("🛡️ Eff. Stack (BB)", min_value=1.0, value=40.0)
             
             spr = eff_stack / pot_flop
-            st.metric("🧩 SPR", f"{spr:.2f}")
+            
+            # SPR Color Logic
+            if spr < 3:
+                s_bg, s_txt, s_lbl = "#450A0A", "#F87171", "⚠️ COMMITTED" # Red
+            elif spr < 6:
+                s_bg, s_txt, s_lbl = "#42210B", "#FACC15", "🟡 TIGHT SPR" # Yellow
+            else:
+                s_bg, s_txt, s_lbl = "#064E3B", "#22C55E", "🟢 DEEP STACK" # Green
+
+            st.markdown(f"""
+                <div class="metric-card" style="background-color: {s_bg}; border: 1px solid {s_txt}44;">
+                    <span class="label-caps" style="color: {s_txt};">{s_lbl}</span>
+                    <span class="value-bold" style="color: {s_txt};">{spr:.2f} SPR</span>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            # ... (Rest of Geometric Sizing code)
             
             st.markdown("---")
             st.markdown("### 📐 Geometric Sizing")
