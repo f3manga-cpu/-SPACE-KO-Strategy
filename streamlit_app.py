@@ -19,7 +19,7 @@ st.markdown("""
     /* 1. Neutral 'Reference' Box (Standard) */
     .neutral-metric-box {
         background-color: #1E293B;
-        padding: 15px;
+        padding: 13px;
         border-radius: 8px;
         text-align: center;
         border: 1px dashed #475569;
@@ -41,7 +41,7 @@ st.markdown("""
     /* 2. Hero 'Bounty' Box (The Focus) */
     .bounty-metric-box {
         background-color: #064E3B; /* Deep Forest Green background */
-        padding: 20px;
+        padding: 17px;
         border-radius: 8px;
         text-align: center;
         border: 2px solid #22C55E; /* Bright Green border */
@@ -172,7 +172,8 @@ with col_left:
         else:
             label, msg_type = "Standard", "secondary"
 
-        st.metric(label=f"⚖️ Bounty Value (BB) ({label})", value=f"{bounty_bb:.2f} BB")
+        <div class="bounty-label"> ⚖️ Bounty Value (BB) ({label}) </div>
+        <div class="bounty-value"> {bounty_bb:.2f} BB</div>
         st.session_state.bounty_bb = bounty_bb
 
     st.markdown(" ") 
@@ -216,7 +217,7 @@ with col_left:
 
                 # Summary Alerts
                 if reduction > 7:
-                    st.success(f"💎**HUGE VALUE!**💎 required equity drops by **{reduction:.1f}%**.")
+                    st.success(f"💎 **HUGE VALUE!** 💎 required equity drops by **{reduction:.1f}%**.")
                 elif reduction > 3:
                     st.info(f"**Impact:** Notable bounty incentive.")
             else:
@@ -230,7 +231,13 @@ with col_right:
             eff_stack = st.number_input("🛡️ Eff. Stack (BB)", min_value=1.0, value=40.0)
             
             spr = eff_stack / pot_flop
-            st.metric("🧩 SPR", f"{spr:.2f}")
+                    st.markdown(f"""
+                        <div class="bounty-metric-box">
+                            <div class="bounty-label"> 🧩 S.P.R. </div>
+                            <div class="bounty-value"> {spr:.2f} </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
             
             st.markdown("---")
             st.markdown("### 📐 Geometric Sizing")
