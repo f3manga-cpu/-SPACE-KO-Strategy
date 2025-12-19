@@ -14,6 +14,7 @@ st.markdown("""
     <style>
     .main { background-color: #0F172A; }
     div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
+    div[data-testid="stMatrixValue"] { font-size: 37px; font-weight: 500; color: #838A85; }
     /* Style for the expander headers to make them look like cards */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
     .stExpander p { font-size: 1.2rem; font-weight: 600; }
@@ -42,7 +43,7 @@ col_left, col_right = st.columns([3, 2], gap="large")
 with col_left:
     # --- SECTION 1: BOUNTY CONVERTER (Always Visible) ---
     with st.container(border=True):
-        st.markdown("## ⚖️ Bounty Value Converter")
+        st.markdown("## 🧮 Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
             current_bb = st.number_input("🪙 Current Big Blind (Chips)", min_value=1, value=200, step=100)
@@ -59,7 +60,7 @@ with col_left:
         else:
             label, msg_type = "Standard", "secondary"
 
-        st.metric(label=f"Bounty Value in BB ({label})", value=f"{bounty_bb:.2f} BB")
+        st.metric(label=f"⚖️ Bounty Value (BB) ({label})", value=f"{bounty_bb:.2f} BB")
         st.session_state.bounty_bb = bounty_bb
 
     st.markdown(" ") 
@@ -79,7 +80,7 @@ with col_left:
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
                     
-                    st.metric("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.matrix("Standard Equity %", f"{equity_standard:.1f}%")
                     st.metric("With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
