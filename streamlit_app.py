@@ -177,9 +177,9 @@ with col_left:
         st.markdown("## 🧮 Bounty Value Converter")
         c1, c2 = st.columns(2)
         with c1:
-            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100, value=200, step=100)
+            current_bb = st.number_input("🪙 Big Blind (Chips)", min_value=100.0, value=200.0, step=100.0)
         with c2:
-            current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.0, value=5.0, step=1.0)
+            current_bounty = st.number_input("🎯 Bounty on Head (€)", min_value=0.5, value=5.0, step=1.0)
         
         bounty_in_chips = (current_bounty / chip_value_euro) * 0.5
         bounty_bb = bounty_in_chips / current_bb
