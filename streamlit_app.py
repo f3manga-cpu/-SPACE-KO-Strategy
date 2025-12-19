@@ -79,7 +79,7 @@ with col_left:
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
                     
-                    st.markdown("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.metric("Standard Equity %", f"{equity_standard:.1f}%")
                     st.metric("With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
