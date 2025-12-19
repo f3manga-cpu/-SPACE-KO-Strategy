@@ -44,15 +44,16 @@ st.markdown("""
         padding: 12px;
         border-radius: 8px;
         text-align: center;
+        margin-bottom: 10px;
         border: 2px solid #22C55E; /* Bright Green border */
     }
     .bounty-value {
-        font-size: 38px;
+        font-size: 35px;
         font-weight: 800;
         color: #22C55E; /* Winamax Green */
     }
     .bounty-label {
-        font-size: 12px;
+        font-size: 10px;
         text-transform: uppercase;
         font-weight: 700;
         letter-spacing: 1.5px;
