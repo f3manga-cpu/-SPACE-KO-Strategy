@@ -126,8 +126,8 @@ with st.sidebar:
         st.caption(f"1k Chips ≈ €{chip_value_euro * 1000:.2f}")
 
     st.markdown("---")
+    st.subheader("📝 Hand Logger")
     
-    with st.expander("📝 Hand Logger", expanded=True):    
     with st.form("session_log_form", clear_on_submit=True):
         st.caption("Log key hands to track ROI & RNG")
         
