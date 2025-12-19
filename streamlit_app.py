@@ -79,7 +79,7 @@ with col_left:
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
                     
-                    ("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.markdown("Standard Equity %", f"{equity_standard:.1f}%")
                     st.metric("With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
@@ -107,11 +107,11 @@ with col_right:
             geo_3 = (math.pow((pot_flop + eff_stack) / pot_flop, 1/3) - 1) * 100
             
             st.markdown(f"**⏩ TURN All-In (2 Streets):**")
-            st.metric(f"**{geo_2:.1f}%** pot/street")
+            st.markdown(f"**{geo_2:.1f}%** pot/street")
            # st.progress(min(geo_2/200, 1.0))
             
             st.markdown(f"**⏩⏩ RIVER All-In (3 Streets):**")
-            st.metric(f"**{geo_3:.1f}%** pot/street")
+            st.markdown(f"**{geo_3:.1f}%** pot/street")
            # st.progress(min(geo_3/200, 1.0))
             
             if spr < 3:
