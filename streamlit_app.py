@@ -126,45 +126,47 @@ with st.sidebar:
         st.caption(f"1k Chips ≈ €{chip_value_euro * 1000:.2f}")
 
     st.markdown("---")
-    st.subheader("📝 Hand Logger")
     
-    with st.form("session_log_form", clear_on_submit=True):
-        st.caption("Log key hands to track ROI & RNG")
-        
-        # Data Inputs
-        s_token = st.number_input("My Token Lvl", min_value=1, max_value=14, value=1)
-        s_blinds = st.text_input("Blinds (e.g. 200/400)", value="200/400")
-        
-        # Strategy Context
-        s_advice = st.selectbox("Tool Advice", ["None", "Call Wider (Low Impact)", "Call Wider (High Impact)", "Shove (Geometric)"])
-        s_decision = st.radio("My Decision", ["Followed Tool", "Ignored Tool (Gut)", "Standard Play"])
-        
-        # Result
-        s_outcome = st.selectbox("Outcome", ["Won Pot (No KO)", "Won Bounty 🎯", "Lost Pot", "Busted ☠️"])
-        
-        # Space KO Specifics (Only matters if Bounty Won)
-        s_bounty_amt = st.number_input("Bounty Won (€)", min_value=0.0, step=0.5)
-        s_multiplier = st.select_slider("RNG Multiplier?", options=["x0.4", "x1", "x2", "x3", "x5", "x10", "x50+"], value="x1")
-        
-        s_notes = st.text_input("Brief Notes", placeholder="e.g. AKs vs 99 flip")
-        
-        submitted = st.form_submit_button("💾 Save to Log")
-        
-        if submitted:
-            new_entry = {
-                "Date_Time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "Buy_In": buy_in,
-                "Token_Level": s_token,
-                "Blind_Level": s_blinds,
-                "Tool_Advice": s_advice,
-                "Decision": s_decision,
-                "Outcome": s_outcome,
-                "Bounty_Won_Euro": s_bounty_amt if "Bounty" in s_outcome else 0,
-                "Multiplier_RNG": s_multiplier if "Bounty" in s_outcome else "N/A",
-                "Notes": s_notes
-            }
-            save_log_entry(new_entry)
-            st.success("✅ Hand Logged!")
+# --- NEW EXPANDABLE HAND LOGGER ---
+    # Setting expanded=False ensures it stays closed until you need to log a hand
+    with st.expander("📝 Log Hand / Bounty", expanded=False):
+        with st.form("session_log_form", clear_on_submit=True):
+            st.caption("Record key hands for ROI/RNG tracking")
+            
+            # Data Inputs
+            s_token = st.number_input("My Token Lvl", min_value=1, max_value=14, value=1)
+            s_blinds = st.text_input("Blinds", value="200/400")
+            
+            # Strategy Context
+            s_advice = st.selectbox("Tool Advice", ["None", "Call Wider", "Shove (Geo)"])
+            s_decision = st.radio("My Decision", ["Followed Tool", "Ignored Tool", "Standard"])
+            
+            # Result
+            s_outcome = st.selectbox("Outcome", ["Won Pot", "Won Bounty 🎯", "Lost Pot", "Busted ☠️"])
+            
+            # Space KO Specifics
+            s_bounty_amt = st.number_input("Bounty Won (€)", min_value=0.0, step=0.5)
+            s_multiplier = st.select_slider("RNG Multiplier?", options=["x0.4", "x1", "x2", "x3", "x5", "x10", "x50+"], value="x1")
+            
+            s_notes = st.text_input("Notes", placeholder="e.g. BB vs SB shove")
+            
+            submitted = st.form_submit_button("💾 Save to Log")
+            
+            if submitted:
+                new_entry = {
+                    "Date_Time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "Buy_In": buy_in,
+                    "Token_Level": s_token,
+                    "Blind_Level": s_blinds,
+                    "Tool_Advice": s_advice,
+                    "Decision": s_decision,
+                    "Outcome": s_outcome,
+                    "Bounty_Won_Euro": s_bounty_amt if "Bounty" in s_outcome else 0,
+                    "Multiplier_RNG": s_multiplier if "Bounty" in s_outcome else "N/A",
+                    "Notes": s_notes
+                }
+                save_log_entry(new_entry)
+                st.success("✅ Hand Logged!")
 
 # --- MAIN APP LAYOUT ---
 st.title("🛸 SPACE KO In-Game Tool")
