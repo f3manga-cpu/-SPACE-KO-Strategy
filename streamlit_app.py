@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="SPACE KO Bounty App",
+    page_title="Franck KO Calculator",
     page_icon="🛸",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -207,7 +207,7 @@ with st.sidebar:
 st.markdown("""
     <div class="title-container">
         <div>
-            <h1 class="title-text"> 🛸 SPACE KO Token App </h1>
+            <h1 class="title-text"> 🛸 SPACE KO Calculator 📟 </h1>
             <div class="subtitle-text">Bust them up & Collect Tokens</div>
         </div>
     </div>
@@ -231,11 +231,11 @@ with col_left:
 
         # Dynamic Color Logic
         if bounty_bb > 8:
-            bg, txt, lbl = "#064E3B", "#22C55E", "🚀 HIGH VALUE" # Gold/Orange
+            bg, txt, lbl = "#064E3B", "#22C55E", "🟢 HIGH VALUE" # Green
         elif bounty_bb >= 3:
-            bg, txt, lbl = "#064E3B", "#22C55E", "✅ SIGNIFICANT" # Green
+            bg, txt, lbl = "#0B4A7D", "#40B4E6", "🔵 SIGNIFICANT" # Blue
         else:
-            bg, txt, lbl = "#1E293B", "#94A3B8", "⚖️ STANDARD"    # Gray
+            bg, txt, lbl = "#1E293B", "#94A3B8", "⚪ STANDARD"    # Gray
 
         st.markdown(f"""
             <div class="metric-card" style="background-color: {bg}; border: 1px solid {txt}44;">
@@ -303,7 +303,7 @@ with col_right:
             if spr < 3:
                 s_bg, s_txt, s_lbl = "#450A0A", "#F87171", "⚠️ COMMITTED" # Red
             elif spr < 6:
-                s_bg, s_txt, s_lbl = "#42210B", "#FACC15", "🟡 TIGHT SPR" # Yellow
+                s_bg, s_txt, s_lbl = "#0B4A7D", "#40B4E6", "🔵 TIGHT SPR" # Blue
             else:
                 s_bg, s_txt, s_lbl = "#064E3B", "#22C55E", "🟢 DEEP STACK" # Green
 
