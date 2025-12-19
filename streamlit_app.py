@@ -167,8 +167,8 @@ with st.sidebar:
             st.caption("Record key hands for ROI/RNG tracking")
             
             # Data Inputs
-            s_token = st.number_input("My Token Lvl", min_value=1, max_value=14, value=1)
-            s_blinds = st.text_input("Blinds", value="200/400")
+            # s_token = st.number_input("My Token Lvl", min_value=1, max_value=14, value=1)
+            # s_blinds = st.text_input("Blinds", value="200/400")
             
             # Strategy Context
             s_advice = st.selectbox("Tool Advice", ["None", "Call Wider", "Shove (Geo)"])
