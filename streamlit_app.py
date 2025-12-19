@@ -12,16 +12,22 @@ st.set_page_config(
 # Custom CSS for polished typography, metric styling, and cleaner expanders
 st.markdown("""
     <style>
+    
+    /* 1. Global Background */
     .main { background-color: #0F172A; }
     
-    .main p { font-size: 1.2rem; font-weight: 600; }
-    
-    div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
-    
-    [data-testid="stMetric"][data-testid="neutral-metric"] div[data-testid="stMetricValue"] 
-    { color: #94A3B8 !important; font-weight: 400 !important; font-size: 32px !important; }
-        
-    st.sidebar p { font-size: 1.2rem; font-weight: 600; }
+    /* 2. Default Metric (The Green "Go" Signal) */
+    div[data-testid="stMetricValue"] {
+        color: #22C55E !important;
+        font-weight: 700 !important;
+    }
+
+    /* 3. The "Neutral" Metric Override (Force Gray/Silver) */
+    .neutral-box div[data-testid="stMetricValue"] {
+        color: #94A3B8 !important;
+        font-weight: 400 !important;
+        font-size: 28px !important;
+    }
     
     /* Style for the expander headers to make them look like cards */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
@@ -79,7 +85,7 @@ with col_left:
             if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
                 c1, c2 = st.columns(2)
                 with c1:
-                    pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=2.25, value=2.25)
+                    pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=1.0, value=2.10)
                     shove_size_bb = st.number_input("⚔️ Villain Shove Size (BB)", min_value=0.8, value=100.0)
                 with c2:
                     total_pot_standard = pot_size_bb + (shove_size_bb * 2)
@@ -88,9 +94,10 @@ with col_left:
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
 
-                    st.markdown('<div data-testid="neutral-metric">', unsafe_allow_html=True)
-                    st.metric("Standard Equity %", f"{equity_standard:.1f}%")
+                    st.markdown('<div class="neutral-box">', unsafe_allow_html=True)
+                    st.metric("Standard Equity %", f"{eq_std:.1f}%")
                     st.markdown('</div>', unsafe_allow_html=True)
+                
                     st.metric("🟢 With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
