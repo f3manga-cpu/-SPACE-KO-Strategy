@@ -207,9 +207,7 @@ with st.sidebar:
 st.markdown("""
     <div class="title-container">
         <div>
-            <div class="title-icon">🛸</div>
-            <h1 class="title-text">SPACE KO Bounty Hunter App</h1>
-            <div class="title-icon">📟</div>
+            <h1 class="title-text"> 🛸 SPACE KO 🛸 Token Buster App 📟</h1>
             <div class="subtitle-text">Bust them up & Collect Tokens</div>
         </div>
     </div>
