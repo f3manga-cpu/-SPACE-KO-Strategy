@@ -171,11 +171,12 @@ with col_left:
             label, msg_type = "Significant", "info"
         else:
             label, msg_type = "Standard", "secondary"
-
+            
+   st.markdown(f"""
         <div class="bounty-label"> ⚖️ Bounty Value (BB) ({label}) </div>
         <div class="bounty-value"> {bounty_bb:.2f} BB</div>
         st.session_state.bounty_bb = bounty_bb
-
+                    """, unsafe_allow_html=True)
     st.markdown(" ") 
 
 # --- SECTION 2: PRE-FLOP ODDS ---
