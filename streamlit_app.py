@@ -19,7 +19,7 @@ st.markdown("""
 /* 4. Premium Title Design */
     .title-container {
         background: linear-gradient(90deg, #0F172A 0%, #1E293B 100%);
-        padding: 25px;
+        padding: 15px;
         border-radius: 15px;
         border: 2px solid #22C55E;
         border-left: 10px solid #22C55E; /* Accent bar */
@@ -33,8 +33,8 @@ st.markdown("""
         color: #FFFFFF;
         font-family: 'Inter', sans-serif;
         margin: 0;
-        font-size: 42px;
-        font-weight: 900;
+        font-size: 36px;
+        font-weight: 800;
         letter-spacing: -1px;
     }
     .title-icon {
