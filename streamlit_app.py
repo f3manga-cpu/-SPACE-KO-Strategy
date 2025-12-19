@@ -11,24 +11,32 @@ st.set_page_config(
 
 # Custom CSS for polished typography, metric styling, and cleaner expanders
 st.markdown("""
-    <style>
-    
+   <style>
     /* 1. Global Background */
     .main { background-color: #0F172A; }
     
-    /* 2. Default Metric (The Green "Go" Signal) */
-    div[data-testid="stMetricValue"] {
-        color: #22C55E ;
-        font-weight: 700 ;
+    /* 2. Default Metric (The Global Green Style) */
+    /* Targeting the label and value specifically */
+    [data-testid="stMetricValue"] > div {
+        color: #22C55E !important;
+        font-weight: 700 !important;
     }
 
-    .neutral-box div[data-testid="stMetricValue"] {
+    /* 3. The Neutral Box Override (Silver/Gray) */
+    /* We use a multi-level selector to ensure we override the global rule above */
+    .neutral-box [data-testid="stMetricValue"] > div,
+    .neutral-box [data-testid="stMetricValue"] {
         color: #94A3B8 !important;
         font-weight: 400 !important;
-        font-size: 28px !important;
+        font-size: 24px !important;
+    }
+
+    /* Target the Label of the neutral metric specifically */
+    .neutral-box [data-testid="stMetricLabel"] p {
+        color: #94A3B8 !important;
     }
     
-    /* Style for the expander headers to make them look like cards */
+    /* Expander Styling */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
     .stExpander p { font-size: 1.2rem; font-weight: 600; }
     </style>
