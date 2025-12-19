@@ -15,6 +15,40 @@ st.set_page_config(
 st.markdown("""
     <style>
     .main { background-color: #0F172A; }
+
+/* 4. Premium Title Design */
+    .title-container {
+        background: linear-gradient(90deg, #0F172A 0%, #1E293B 100%);
+        padding: 25px;
+        border-radius: 15px;
+        border: 2px solid #22C55E;
+        border-left: 10px solid #22C55E; /* Accent bar */
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .title-text {
+        color: #FFFFFF;
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: -1px;
+        text-transform: uppercase;
+    }
+    .title-icon {
+        font-size: 50px;
+        filter: drop-shadow(0 0 10px #22C55E);
+    }
+    .subtitle-text {
+        color: #22C55E;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
     
     /* 1. Neutral 'Reference' Box (Standard) */
     .neutral-metric-box {
@@ -169,7 +203,17 @@ with st.sidebar:
                 st.success("✅ Hand Logged!")
 
 # --- MAIN APP LAYOUT ---
-st.title("🛸 SPACE KO In-Game Tool")
+
+# --- APP HEADER ---
+st.markdown("""
+    <div class="title-container">
+        <div>
+            <div class="subtitle-text">Bust them up & Collect Tokens</div>
+            <h1 class="title-text">SPACE KO Bounty Hunter App</h1>
+        </div>
+        <div class="title-icon">🛸📟</div>
+    </div>
+""", unsafe_allow_html=True)
 
 col_left, col_right = st.columns([3, 2], gap="large")
 
