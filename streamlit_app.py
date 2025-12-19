@@ -64,14 +64,14 @@ with col_left:
 
     st.markdown(" ") 
 
-    # --- SECTION 2: PRE-FLOP ADVISOR (Starts Closed) ---
+    # --- SECTION 2: PRE-FLOP ODDS (Starts Closed) ---
     with st.container(border=True):
-        with st.expander("## 📊 Pre-Flop Call Advisor", expanded=False):
+        with st.expander("## 📊 Pre-Flop Odds", expanded=False):
             if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
                 c1, c2 = st.columns(2)
                 with c1:
-                    pot_size_bb = st.number_input("Pot Before Shove (BB)", min_value=1.0, value=5.0)
-                    shove_size_bb = st.number_input("Villain Shove Size (BB)", min_value=1.0, value=15.0)
+                    pot_size_bb = st.number_input("Pot Before Shove (BB)", min_value=2.25, value=2.25)
+                    shove_size_bb = st.number_input("Villain Shove Size (BB)", min_value=0.8, value=100.0)
                 with c2:
                     total_pot_standard = pot_size_bb + (shove_size_bb * 2)
                     equity_standard = (shove_size_bb / total_pot_standard) * 100
@@ -90,10 +90,10 @@ with col_left:
                 st.warning("Enter bounty details in Section 1 to unlock.")
 
 with col_right:
-    # --- SECTION 3: POST-FLOP PLANNING (Starts Closed) ---
+    # --- SECTION 3: POST-FLOP METRICS (Starts Closed) ---
     with st.container(border=True):
-        with st.expander("## ♠️❤️ Post-Flop Planner", expanded=False):
-            pot_flop = st.number_input("Current Pot (BB)", min_value=1.0, value=10.0)
+        with st.expander("## ♠️❤️ Post-Flop Metrics", expanded=False):
+            pot_flop = st.number_input("Flop Pot Size (BB)", min_value=2.75, value=10.0)
             eff_stack = st.number_input("Effective Stack (BB)", min_value=1.0, value=50.0)
             
             spr = eff_stack / pot_flop
