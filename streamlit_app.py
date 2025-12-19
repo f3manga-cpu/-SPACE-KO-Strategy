@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="SPACE KO Strategy App",
+    page_title="SPACE KO Bounty App",
     page_icon="🛸",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -36,7 +36,6 @@ st.markdown("""
         font-size: 42px;
         font-weight: 900;
         letter-spacing: -1px;
-        text-transform: uppercase;
     }
     .title-icon {
         font-size: 50px;
@@ -208,10 +207,11 @@ with st.sidebar:
 st.markdown("""
     <div class="title-container">
         <div>
-            <div class="subtitle-text">Bust them up & Collect Tokens</div>
+            <div class="title-icon">🛸</div>
             <h1 class="title-text">SPACE KO Bounty Hunter App</h1>
+            <div class="title-icon">📟</div>
+            <div class="subtitle-text">Bust them up & Collect Tokens</div>
         </div>
-        <div class="title-icon">🛸📟</div>
     </div>
 """, unsafe_allow_html=True)
 
