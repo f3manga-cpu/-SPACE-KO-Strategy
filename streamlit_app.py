@@ -14,6 +14,14 @@ st.markdown("""
     <style>
     .main { background-color: #0F172A; }
     div[data-testid="stMetricValue"] { font-size: 42px; font-weight: 700; color: #22C55E; }
+
+/* Neutral Metric Style (Silver/Gray, not bold) */
+    [data-testid="stMetric"][data-testid="neutral-metric"] div[data-testid="stMetricValue"] {
+        color: #94A3B8 !important; /* Slate 400 (Silver/Gray) */
+        font-weight: 400 !important;
+        font-size: 32px !important;
+    }
+    
     /* Style for the expander headers to make them look like cards */
     .stExpander { border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 10px; }
     .stExpander p { font-size: 1.2rem; font-weight: 600; }
@@ -70,17 +78,20 @@ with col_left:
             if 'bounty_bb' in st.session_state and st.session_state.bounty_bb > 0:
                 c1, c2 = st.columns(2)
                 with c1:
-                    pot_size_bb = st.number_input("Pot Before Shove (BB)", min_value=2.25, value=2.25)
-                    shove_size_bb = st.number_input("Villain Shove Size (BB)", min_value=0.8, value=100.0)
+                    pot_size_bb = st.number_input("💰 Pot Before Shove (BB)", min_value=2.25, value=2.25)
+                    shove_size_bb = st.number_input("⚔️ Villain Shove Size (BB)", min_value=0.8, value=100.0)
                 with c2:
                     total_pot_standard = pot_size_bb + (shove_size_bb * 2)
                     equity_standard = (shove_size_bb / total_pot_standard) * 100
                     total_pot_ko = total_pot_standard + st.session_state.bounty_bb
                     equity_ko = (shove_size_bb / total_pot_ko) * 100
                     reduction = equity_standard - equity_ko
-                    
+
+                    st.markdown('<div data-testid="neutral-metric">', unsafe_allow_html=True)
                     st.metric("Standard Equity %", f"{equity_standard:.1f}%")
-                    st.metric("With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    st.metric("🟢 With Bounty %", f"{equity_ko:.1f}%", delta=f"-{reduction:.1f}%", delta_color="inverse")
 
                 if reduction > 7:
                     st.success(f"**CALL WIDER! 💚** Equity requirement drops by **{reduction:.1f}%**.")
@@ -93,8 +104,8 @@ with col_right:
     # --- SECTION 3: POST-FLOP METRICS (Starts Closed) ---
     with st.container(border=True):
         with st.expander("## ♠️❤️ Post-Flop Metrics", expanded=False):
-            pot_flop = st.number_input("Flop Pot Size (BB)", min_value=2.75, value=10.0)
-            eff_stack = st.number_input("Effective Stack (BB)", min_value=1.0, value=50.0)
+            pot_flop = st.number_input("💰 Flop Pot Size (BB)", min_value=2.75, value=10.0)
+            eff_stack = st.number_input("🛡️ Effective Stack (BB)", min_value=1.0, value=50.0)
             
             spr = eff_stack / pot_flop
             st.metric("🧩 SPR", f"{spr:.2f}")
