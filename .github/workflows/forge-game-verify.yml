@@ -73,7 +73,7 @@ jobs:
 
             await page.getByRole('button',{name:/RANKED GAUNTLET/}).click();
             if(!(await page.locator('#modeKicker').innerText()).includes('RANKED GAUNTLET')) throw new Error('gauntlet missing');
-            if(!(await page.getByRole('button',{name:'BEGIN RANKED RUN'}).isVisible()) throw new Error('gauntlet start missing');
+            if(!(await page.getByRole('button',{name:'BEGIN RANKED RUN'}).isVisible())) throw new Error('gauntlet start missing');
 
             const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
             if(overflow>1) throw new Error(`mobile horizontal overflow: ${overflow}px`);
