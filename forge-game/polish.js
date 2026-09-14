@@ -45,6 +45,11 @@ function evidenceAdjustedRating(p){
   )));
 }
 
+function setText(selector,value){
+  const el=$(selector);
+  if(el&&el.textContent!==value) el.textContent=value;
+}
+
 function fixRankUI(){
   const p=readProgress();
   const rating=evidenceAdjustedRating(p);
@@ -54,14 +59,22 @@ function fixRankUI(){
   const max=next?next.min:4200;
   const pct=next?100*(rating-rank.min)/(max-rank.min):100;
 
-  if($('#rating')) $('#rating').textContent=String(rating).padStart(4,'0');
-  if($('#rankName')) $('#rankName').textContent=rank.name;
-  if($('#rankTitle')) $('#rankTitle').textContent=rank.name;
-  if($('#rankEmblem')) $('#rankEmblem').textContent=rank.tag;
-  if($('#rankFill')) $('#rankFill').style.width=`${Math.max(0,Math.min(100,pct))}%`;
-  if($('#rankNext')) $('#rankNext').innerHTML=next
-    ? `${Math.max(0,next.min-rating)} rating to <span class="qualify">${next.name}</span>.`
-    : 'Top rank secured. Defend it.';
+  setText('#rating',String(rating).padStart(4,'0'));
+  setText('#rankName',rank.name);
+  setText('#rankTitle',rank.name);
+  setText('#rankEmblem',rank.tag);
+
+  const fill=$('#rankFill');
+  const width=`${Math.max(0,Math.min(100,pct))}%`;
+  if(fill&&fill.style.width!==width) fill.style.width=width;
+
+  const nextEl=$('#rankNext');
+  if(nextEl){
+    const html=next
+      ? `${Math.max(0,next.min-rating)} rating to <span class="qualify">${next.name}</span>.`
+      : 'Top rank secured. Defend it.';
+    if(nextEl.innerHTML!==html) nextEl.innerHTML=html;
+  }
 }
 
 function fixSnapLabels(){
@@ -69,7 +82,8 @@ function fixSnapLabels(){
   if(!kicker||!kicker.textContent.includes('SPR SNAP')) return;
   document.querySelectorAll('#responseZone .answer[data-v]').forEach(button=>{
     const value=button.dataset.v;
-    if(value!==undefined && button.textContent!==`SPR ${value}`) button.textContent=`SPR ${value}`;
+    const text=`SPR ${value}`;
+    if(value!==undefined && button.textContent!==text) button.textContent=text;
   });
 }
 
