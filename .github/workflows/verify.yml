@@ -1,0 +1,22 @@
+name: Verify Geometry Reflex Lab
+
+on:
+  push:
+    branches:
+      - geometry-reflex-lab-v2
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m py_compile streamlit_app.py geometry.py
+      - name: Install test dependency
+        run: python -m pip install pytest
+      - name: Run math tests
+        run: python -m pytest -q
