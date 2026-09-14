@@ -1,0 +1,9 @@
+{
+  "name":"Geometry Reflex Forge",
+  "short_name":"Reflex Forge",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#07110d",
+  "theme_color":"#07110d",
+  "description":"Immersive geometric bet sizing trainer"
+}
