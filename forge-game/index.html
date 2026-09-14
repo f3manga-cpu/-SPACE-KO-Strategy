@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050a10" />
+  <meta name="description" content="Geometry Forge Arena — competitive geometric bet-sizing reflex training." />
+  <title>Geometry Forge Arena</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="eyebrow">ELITE POKER COGNITION SYSTEM</div>
+      <h1>GEOMETRY <span>FORGE</span></h1>
+      <div class="subline">Turn stack-to-pot geometry into reflex.</div>
+    </div>
+    <div class="top-stats">
+      <div class="stat"><small>RANK</small><strong id="rankName">ROOKIE</strong></div>
+      <div class="stat"><small>RATING</small><strong id="rating">0000</strong></div>
+      <div class="stat"><small>STREAK</small><strong id="streak">0×</strong></div>
+      <button id="audioToggle" class="icon-btn" type="button" aria-label="Toggle sound">◈</button>
+    </div>
+  </header>
+
+  <section class="mission-strip">
+    <div>
+      <div class="eyebrow">TODAY'S MISSION</div>
+      <strong id="missionText">Forge five anchors, snap three SPRs, clear two table reads.</strong>
+    </div>
+    <div class="mission-progress"><span id="missionFill"></span></div>
+    <div class="mission-count" id="missionCount">0 / 10</div>
+  </section>
+
+  <main class="game-shell">
+    <nav class="mode-rail" aria-label="Training modes">
+      <button class="mode-card active" data-mode="anchor" type="button"><b>01</b><span>ANCHOR<br>FORGE</span><small>Memory</small></button>
+      <button class="mode-card" data-mode="snap" type="button"><b>02</b><span>SPR<br>SNAP</span><small>Ratio</small></button>
+      <button class="mode-card" data-mode="runway" type="button"><b>03</b><span>RUNWAY<br>DUEL</span><small>Discriminate</small></button>
+      <button class="mode-card" data-mode="table" type="button"><b>04</b><span>LIVE<br>TABLE</span><small>Transfer</small></button>
+      <button class="mode-card hot" data-mode="gauntlet" type="button"><b>05</b><span>RANKED<br>GAUNTLET</span><small>Compete</small></button>
+    </nav>
+
+    <section class="arena-panel">
+      <div class="arena-head">
+        <div>
+          <div id="modeKicker" class="eyebrow">ANCHOR FORGE · GUIDED RETRIEVAL</div>
+          <h2 id="prompt">SPR 4 · 3 streets</h2>
+          <p id="promptSub">Retrieve before you touch anything.</p>
+        </div>
+        <div class="difficulty" id="difficulty">CALIBRATION</div>
+      </div>
+
+      <div id="worldWrap" class="world-wrap">
+        <canvas id="world" aria-label="Interactive 3D stackoff simulation"></canvas>
+        <div class="world-fallback hidden" id="worldFallback">
+          <div><small>STACK</small><strong id="fallbackStack">40</strong></div>
+          <div class="arrow">→</div>
+          <div><small>POT</small><strong id="fallbackPot">10</strong></div>
+        </div>
+        <div class="world-hud left"><small>EFFECTIVE</small><b id="worldStack">40.0bb</b></div>
+        <div class="world-hud center" id="streetLabel">READY</div>
+        <div class="world-hud right"><small>POT</small><b id="worldPot">10.0bb</b></div>
+        <div id="impact" class="impact-layer" aria-live="polite"></div>
+        <div id="timerBar" class="timer-bar"><span></span></div>
+      </div>
+
+      <div class="response-zone" id="responseZone"></div>
+
+      <div class="feedback" id="feedback" aria-live="polite">
+        The animation is proof, not the answer. Retrieve first.
+      </div>
+
+      <div class="causal-strip" id="causalStrip">
+        <div><small>START POT</small><b id="cPot">10.0</b></div>
+        <i>+</i><div><small>YOUR BET</small><b id="cBet">5.4</b></div>
+        <i>+</i><div><small>CALL</small><b id="cCall">5.4</b></div>
+        <i>=</i><div class="accent"><small>NEW POT</small><b id="cNew">20.8</b></div>
+      </div>
+    </section>
+
+    <aside class="command-panel">
+      <section class="panel rank-panel">
+        <div class="eyebrow">COMPETITIVE STATUS</div>
+        <div class="rank-row"><div class="rank-emblem" id="rankEmblem">R</div><div><h3 id="rankTitle">ROOKIE</h3><p id="rankNext">250 rating to Bronze.</p></div></div>
+        <div class="rank-track"><span id="rankFill"></span></div>
+        <div class="score-grid">
+          <div><small>SESSION</small><b id="sessionScore">0</b></div>
+          <div><small>ACCURACY</small><b id="accuracy">—</b></div>
+          <div><small>AVG TIME</small><b id="avgTime">—</b></div>
+        </div>
+      </section>
+
+      <section class="panel mastery-panel">
+        <div class="panel-head"><div><div class="eyebrow">MASTERY MAP</div><h3>Geometry constellation</h3></div><button id="weakestBtn" class="mini-btn" type="button">HUNT WEAKNESS</button></div>
+        <svg id="constellation" viewBox="0 0 360 290" aria-label="Anchor mastery map"></svg>
+        <div class="legend"><span><i class="g"></i>3 streets</span><span><i class="b"></i>2 streets</span></div>
+      </section>
+
+      <section class="panel record-panel">
+        <div class="eyebrow">PERSONAL RECORDS</div>
+        <div class="record"><span>Ranked Gauntlet</span><b id="pbGauntlet">—</b></div>
+        <div class="record"><span>Longest streak</span><b id="pbStreak">0</b></div>
+        <div class="record"><span>Best table chain</span><b id="pbTable">0</b></div>
+      </section>
+    </aside>
+  </main>
+
+  <section class="lower-grid">
+    <section class="panel learning-panel">
+      <div class="panel-head">
+        <div><div class="eyebrow">ROOT REACTOR</div><h2>Reconstruct when memory fails.</h2></div>
+        <div class="formula-result" id="formulaResult">54.0%</div>
+      </div>
+      <div class="reactor-controls">
+        <label>SPR <input id="reactorSpr" type="range" min=".5" max="8" value="4" step=".5"><b id="reactorSprLabel">4.0</b></label>
+        <div class="segmented"><button data-n="2" type="button">2 STREETS</button><button class="active" data-n="3" type="button">3 STREETS</button></div>
+      </div>
+      <div class="formula-steps">
+        <button type="button" data-step="0"><b>2S</b><span>both stacks</span></button>
+        <button type="button" data-step="1"><b>+1</b><span>starting pot</span></button>
+        <button type="button" data-step="2"><b>ROOT</b><span>share growth</span></button>
+        <button type="button" data-step="3"><b>−1</b><span>remove base</span></button>
+        <button type="button" data-step="4"><b>÷2</b><span>bet + call</span></button>
+      </div>
+      <div class="formula-explain" id="formulaExplain">DOUBLE → +1 → ROOT → −1 → HALF. Tap through the machine.</div>
+    </section>
+
+    <section class="panel retention-panel">
+      <div class="panel-head"><div><div class="eyebrow">RETENTION ENGINE</div><h2 id="retentionTitle">Your weakest anchors will return.</h2></div><button id="resetProgress" class="danger-btn" type="button">RESET</button></div>
+      <div id="retentionList" class="retention-list"></div>
+      <p class="hint">Misses return after interference. Strong memories fade from practice, then resurface after spacing. Rank comes from skill, not grinding.</p>
+    </section>
+  </section>
+
+  <footer>
+    <span>Heads-up bet/call geometry · use effective stack · training aid, not solver prescription.</span>
+    <span id="buildLabel">FORGE ARENA // v4</span>
+  </footer>
+</div>
+
+<div id="intro" class="intro-overlay">
+  <div class="intro-card">
+    <div class="eyebrow">GEOMETRY FORGE // INITIAL CALIBRATION</div>
+    <h2>Make the stack fit the runway.</h2>
+    <p>Same SPR. Different streets. Different geometry. Your first two trials forge the contrast that anchors everything else.</p>
+    <div class="intro-contrast">
+      <div><small>SPR 4 · 3 streets</small><b>54 · 54 · 54</b></div>
+      <div><small>SPR 4 · 2 streets</small><b>POT · POT</b></div>
+    </div>
+    <button id="enterForge" class="cta" type="button">ENTER THE FORGE</button>
+  </div>
+</div>
+
+<script type="module" src="polish.js"></script>
+</body>
+</html>

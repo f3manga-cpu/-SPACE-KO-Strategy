@@ -1,0 +1,108 @@
+name: Verify Geometry Forge Arena
+
+on:
+  pull_request:
+    paths:
+      - "forge-game/**"
+      - ".github/workflows/forge-game-verify.yml"
+  push:
+    branches: [main]
+    paths:
+      - "forge-game/**"
+      - ".github/workflows/forge-game-verify.yml"
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: |
+          node --check forge-game/app.js
+          node --check forge-game/polish.js
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve app
+        run: |
+          python3 -m http.server 8765 --directory forge-game >/tmp/forge-http.log 2>&1 &
+          echo $! > /tmp/forge-http.pid
+          sleep 2
+          curl --fail http://127.0.0.1:8765/
+      - name: Mobile interaction acceptance
+        run: |
+          node <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:390,height:844}});
+            const errors=[];
+            page.on('console',m=>{if(m.type()==='error') errors.push(m.text())});
+            await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+            if(await page.locator('#enterForge').isVisible()) await page.locator('#enterForge').click();
+            if((await page.locator('#prompt').innerText())!=='SPR 4 · 3 streets') throw new Error('tutorial anchor 1 missing');
+            await page.getByRole('button',{name:'54%',exact:true}).click();
+            await page.waitForTimeout(180);
+            if(!(await page.locator('#feedback').innerText()).includes('LOCKED')) throw new Error('correct reinforcement missing');
+            if((await page.locator('#streak').innerText())!=='1×') throw new Error('streak did not advance');
+            if(!(await page.locator('#impact').innerText()).trim()) throw new Error('impact reward missing');
+            await page.waitForTimeout(1650);
+            if((await page.locator('#prompt').innerText())!=='SPR 4 · 2 streets') throw new Error('tutorial contrast missing');
+            await page.locator('#responseZone .answer[data-v="100"]').click();
+            await page.waitForTimeout(220);
+            const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('geometry-forge-arena-v4')));
+            if(!saved || saved.mastery[2]<1 || saved.mastery[9]<1) throw new Error('mastery persistence missing');
+            const earlyRating=Number(await page.locator('#rating').innerText());
+            if(!Number.isFinite(earlyRating) || earlyRating>=650) throw new Error(`rank advanced without enough evidence: ${earlyRating}`);
+
+            await page.getByRole('button',{name:/SPR SNAP/}).click();
+            if(!(await page.locator('#modeKicker').innerText()).includes('SPR SNAP')) throw new Error('SPR Snap mode missing');
+            if(await page.locator('.answer').count()<3) throw new Error('SPR Snap answers missing');
+            const snapLabels=await page.locator('#responseZone .answer').allInnerTexts();
+            if(!snapLabels.every(x=>x.startsWith('SPR '))) throw new Error(`SPR Snap labels incorrect: ${snapLabels.join(', ')}`);
+
+            await page.getByRole('button',{name:/LIVE TABLE/}).click();
+            const prompt=await page.locator('#prompt').innerText();
+            const sub=await page.locator('#promptSub').innerText();
+            const m=prompt.match(/([0-9.]+)bb pot · ([0-9.]+)bb effective/);
+            if(!m) throw new Error('table context missing');
+            const pot=Number(m[1]),stack=Number(m[2]),n=sub.includes('3 streets')?3:2,spr=stack/pot;
+            const target=100*((Math.pow(1+2*spr,1/n)-1)/2);
+            await page.locator('#betSlider').fill(String(Math.round(target)));
+            await page.locator('#tableCommit').click();
+            await page.waitForTimeout(180);
+            if(!(await page.locator('#feedback').innerText()).includes('TABLE-READY')) throw new Error('table transfer failed');
+
+            await page.getByRole('button',{name:/RANKED GAUNTLET/}).click();
+            if(!(await page.locator('#modeKicker').innerText()).includes('RANKED GAUNTLET')) throw new Error('gauntlet missing');
+            if(!(await page.getByRole('button',{name:'BEGIN RANKED RUN',exact:true}).isVisible())) throw new Error('gauntlet start missing');
+
+            const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+            if(overflow>1) throw new Error(`mobile horizontal overflow: ${overflow}px`);
+            if(errors.length) throw new Error(`console errors: ${errors.join(' | ')}`);
+            await browser.close();
+            console.log('390px Geometry Forge Arena acceptance passed');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - name: Desktop layout acceptance
+        run: |
+          node <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1440,height:900}});
+            await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+            await page.evaluate(()=>localStorage.setItem('geometry-forge-arena-v4',JSON.stringify({introSeen:true})));
+            await page.reload({waitUntil:'networkidle'});
+            const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+            if(overflow>1) throw new Error(`desktop horizontal overflow: ${overflow}px`);
+            if(!(await page.locator('#constellation').isVisible())) throw new Error('mastery world not visible');
+            if(!(await page.locator('#world').isVisible()) && !(await page.locator('#worldFallback').isVisible())) throw new Error('world missing');
+            await browser.close();
+            console.log('1440px Geometry Forge Arena acceptance passed');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
