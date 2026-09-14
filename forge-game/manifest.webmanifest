@@ -1,0 +1,9 @@
+{
+  "name":"Geometry Forge Arena",
+  "short_name":"Geometry Forge",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#050a10",
+  "theme_color":"#050a10",
+  "description":"Competitive geometric poker bet-sizing reflex trainer."
+}
