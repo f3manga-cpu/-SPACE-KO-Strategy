@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07110d" />
+  <meta name="description" content="Immersive geometric bet-sizing trainer for No-Limit Hold'em." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Geometry Reflex Forge</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">G</div>
+        <div>
+          <div class="eyebrow">GEOMETRIC BETTING</div>
+          <h1>Reflex Forge</h1>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="hud-item"><span>COMBO</span><strong id="hudCombo">0×</strong></div>
+        <div class="hud-item"><span>MASTERY</span><strong id="hudMastery">0/10</strong></div>
+        <div class="hud-item"><span>ENERGY</span><strong id="hudEnergy">0</strong></div>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" aria-label="Training modes">
+      <button class="mode-tab active" data-mode="arena">Arena</button>
+      <button class="mode-tab" data-mode="understand">Understand</button>
+      <button class="mode-tab" data-mode="transfer">Table</button>
+      <button class="mode-tab" data-mode="mastery">Mastery</button>
+    </nav>
+
+    <main>
+      <section class="mode-panel active" data-panel="arena">
+        <div class="arena-grid">
+          <div class="stage-card">
+            <div class="stage-head">
+              <div>
+                <div class="eyebrow">RETRIEVE → COMMIT → EXPERIENCE</div>
+                <div id="arenaPrompt" class="arena-prompt">SPR 4 · 3 streets</div>
+              </div>
+              <div id="statusPill" class="status-pill">Say it first</div>
+            </div>
+
+            <div class="stage-wrap" id="stageWrap">
+              <canvas id="world" aria-label="Interactive three-dimensional stackoff simulation"></canvas>
+              <div class="stage-label left">YOUR STACK</div>
+              <div class="stage-label center" id="streetLabel">READY</div>
+              <div class="stage-label right">POT</div>
+              <div id="rewardLayer" class="reward-layer" aria-live="polite"></div>
+              <div id="fallbackScene" class="fallback-scene hidden">
+                <div class="fallback-column"><span>STACK</span><strong id="fallbackStack">40bb</strong></div>
+                <div class="fallback-arrow">→</div>
+                <div class="fallback-column"><span>POT</span><strong id="fallbackPot">10bb</strong></div>
+              </div>
+            </div>
+
+            <div id="answerGrid" class="answer-grid"></div>
+            <div id="arenaFeedback" class="feedback-card">Retrieve the answer in your head before tapping. Correct answers make the geometry resolve.</div>
+          </div>
+
+          <aside class="side-stack">
+            <div class="panel-card compact">
+              <div class="eyebrow">ANCHOR CONSTELLATION</div>
+              <svg id="miniConstellation" viewBox="0 0 360 260" role="img" aria-label="Mastery constellation"></svg>
+            </div>
+
+            <div class="panel-card compact">
+              <div class="eyebrow">GOLDEN CONTRAST</div>
+              <button class="contrast-button" data-jump="4,3"><small>SPR 4 · 3 streets</small><strong>54 · 54 · 54</strong></button>
+              <button class="contrast-button" data-jump="4,2"><small>SPR 4 · 2 streets</small><strong>POT · POT</strong></button>
+              <button class="contrast-button" data-jump="1.5,2"><small>SPR 1.5 · 2 streets</small><strong>½ POT · ½ POT</strong></button>
+            </div>
+
+            <div class="panel-card compact">
+              <div class="eyebrow">SESSION</div>
+              <div class="progress-row"><span>Clean recalls</span><strong id="cleanRecalls">0 / 10</strong></div>
+              <div class="progress-track"><div id="sessionProgress" class="progress-fill"></div></div>
+              <p id="sessionCoach" class="coach-copy">Build ten clean recalls, then transfer them to real table numbers.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="mode-panel" data-panel="understand">
+        <div class="understand-grid">
+          <div class="panel-card">
+            <div class="eyebrow">THE MACHINE</div>
+            <h2>Make the stack fit the runway.</h2>
+            <p class="lead">A geometric bet is the one repeated fraction that makes the effective stack and the remaining streets end together.</p>
+
+            <div class="control-grid">
+              <label>Pot <span id="uPotLabel">10bb</span><input id="uPot" type="range" min="5" max="30" step="1" value="10" /></label>
+              <label>Effective stack <span id="uStackLabel">40bb</span><input id="uStack" type="range" min="10" max="120" step="1" value="40" /></label>
+              <div class="segmented" role="group" aria-label="Streets remaining">
+                <button id="uTwo">2 streets</button><button id="uThree" class="active">3 streets</button>
+              </div>
+            </div>
+
+            <div class="live-equation">
+              <div><span>SPR</span><strong id="uSpr">4.00</strong></div>
+              <div class="equation-arrow">→</div>
+              <div><span>GEOMETRY</span><strong id="uTarget">54.0%</strong></div>
+            </div>
+
+            <div id="runway" class="runway"></div>
+          </div>
+
+          <div class="panel-card">
+            <div class="eyebrow">RECONSTRUCT FROM MEANING</div>
+            <h2>Five actions. One causal story.</h2>
+            <div id="formulaSteps" class="formula-steps">
+              <button data-step="0"><span>1</span><strong>2S</strong><small>Both stacks</small></button>
+              <button data-step="1"><span>2</span><strong>+ 1</strong><small>Keep the pot</small></button>
+              <button data-step="2"><span>3</span><strong>ROOT</strong><small>Split the growth</small></button>
+              <button data-step="3"><span>4</span><strong>− 1</strong><small>Remove what existed</small></button>
+              <button data-step="4"><span>5</span><strong>÷ 2</strong><small>You + caller</small></button>
+            </div>
+            <div id="formulaExplain" class="explain-card">Tap the steps. The goal is to remember an action sequence, not symbols.</div>
+            <div class="mnemonic-banner">DOUBLE → +1 → ROOT → −1 → HALF</div>
+          </div>
+        </div>
+
+        <div class="panel-card landscape-card">
+          <div class="section-head">
+            <div><div class="eyebrow">3D GEOMETRY LANDSCAPE</div><h2>Explore the shape of commitment.</h2></div>
+            <div class="legend"><span><i class="dot two"></i>2 streets</span><span><i class="dot three"></i>3 streets</span></div>
+          </div>
+          <canvas id="landscape" aria-label="Interactive three-dimensional landscape of SPR and geometric bet size"></canvas>
+          <p class="hint">Drag to rotate. Tap a landmark to load it into the simulator. Notice how the two-street ridge climbs much faster.</p>
+        </div>
+      </section>
+
+      <section class="mode-panel" data-panel="transfer">
+        <div class="table-grid">
+          <div class="poker-card">
+            <div class="table-felt">
+              <div class="table-copy"><div class="eyebrow">MTT TRANSFER ARENA</div><h2>No SPR is given.</h2><p>Build it from the table state.</p></div>
+              <div class="seat villain"><span>Villain effective</span><strong id="tStack">44.0bb</strong></div>
+              <div class="pot-chip"><span>POT</span><strong id="tPot">11.8bb</strong></div>
+              <div class="seat hero"><span>Hero</span><strong>covers</strong></div>
+              <div class="street-ribbon" id="tRunway">FLOP · 3 streets</div>
+            </div>
+          </div>
+
+          <div class="panel-card decision-card">
+            <div class="eyebrow">MENTAL GYMNASTICS</div>
+            <div class="decision-step"><span>1</span><label>Estimate SPR<input id="tSprGuess" inputmode="decimal" type="number" step="0.1" placeholder="e.g. 3.7" /></label></div>
+            <div class="decision-step"><span>2</span><label>Choose sizing<select id="tSizeGuess"><option>35</option><option>40</option><option>46</option><option>50</option><option selected>54</option><option>61</option><option>62</option><option>68</option><option>75</option><option>82</option><option>100</option></select></label></div>
+            <button id="tCommit" class="primary-button">COMMIT DECISION</button>
+            <div id="tFeedback" class="feedback-card">Pot → effective stack → SPR → streets → geometry.</div>
+            <button id="tNext" class="secondary-button">NEW HAND</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="mode-panel" data-panel="mastery">
+        <div class="mastery-grid">
+          <div class="panel-card">
+            <div class="eyebrow">YOUR MEMORY MAP</div>
+            <h2>Ten anchors. One reflex system.</h2>
+            <svg id="masteryConstellation" viewBox="0 0 720 440" role="img" aria-label="Detailed mastery constellation"></svg>
+          </div>
+          <div class="panel-card">
+            <div class="eyebrow">ADAPTIVE PRESCRIPTION</div>
+            <h2 id="weakTitle">Start training.</h2>
+            <p id="weakCopy" class="lead">Your misses will automatically return after interference, not immediately.</p>
+            <div id="masteryList" class="mastery-list"></div>
+            <button id="resetProgress" class="danger-button">Reset learning history</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Geometry Reflex Forge</span><span>Heads-up bet/call geometry · use effective stack</span>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
