@@ -18,6 +18,8 @@ async function onboard(page: Page, wrongFirst = false) {
   await page.getByRole('button', { name: /LOCK THE INSIGHT/ }).click({ force: true });
   await page.getByRole('button', { name: /POWER UP THE FORGE/ }).click({ force: true });
   await expect(page.locator('[data-screen="command"]')).toBeVisible();
+  // Profile writes are intentionally coalesced for IndexedDB; cross the flush boundary before reload assertions.
+  await page.waitForTimeout(250);
 }
 
 async function chooseConfidence(page: Page) {
