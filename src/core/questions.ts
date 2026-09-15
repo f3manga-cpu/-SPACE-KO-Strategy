@@ -3,9 +3,11 @@ import {
   TWO_STREET_ANCHORS,
   THREE_STREET_ANCHORS,
   anchorConceptId,
+  bbToPercent,
   geometricBetPercent,
   getAnchor,
   nearestAnchor,
+  percentToBb,
   qualitativeBetBand,
   rootReactorStages,
   sprFromPotStack,
@@ -15,6 +17,7 @@ import { createRng, pick, range, shuffle } from "./random";
 import type {
   AnswerValue,
   ErrorDirection,
+  LiveTableAnswerUnit,
   Question,
   QuestionChoice,
   QuestionType,
@@ -43,6 +46,12 @@ export interface AnswerEvaluation {
   expected: AnswerValue;
   numericError: number | null;
   errorDirection: ErrorDirection;
+  /** Raw value committed by the player before representation normalisation. */
+  submittedValue?: AnswerValue;
+  /** Representation used for a Live Table commitment. */
+  responseUnit?: LiveTableAnswerUnit;
+  /** Canonical percentage-of-pot value used to grade a Live Table answer. */
+  responsePercent?: number | null;
 }
 
 const questionId = (type: QuestionType, seed: number, conceptId: string): string =>
@@ -295,19 +304,21 @@ function generateTransfer(options: Required<QuestionGenerationOptions>): Questio
   const potBb = round(pick([6.6, 7.4, 8.8, 9.5, 11.8, 13.2, 15.5, 18.4], rng), 1);
   const effectiveStackBb = round(potBb * spr, 1);
   const actualSpr = sprFromPotStack(potBb, effectiveStackBb);
-  const percent = geometricBetPercent(actualSpr, streets);
-  const targetBetBb = round((potBb * percent) / 100, 1);
+  const targetPercent = geometricBetPercent(actualSpr, streets);
+  const displayedTargetPercent = round(targetPercent, 1);
+  // Live Table has one strategic tolerance, expressed in percentage points.
+  // BB answers are converted back to % pot before this tolerance is applied.
   const percentTolerance = 6 - options.difficulty * 3.5;
-  const toleranceBb = Math.max(0.2, round((potBb * percentTolerance) / 100, 1));
+  const targetBetBb = round(percentToBb(potBb, targetPercent), 1);
   const choices = options.scaffoldLevel >= 2
     ? makeChoices(
         [
-          targetBetBb,
-          round(Math.max(0.1, targetBetBb - toleranceBb * 2), 1),
-          round(targetBetBb + toleranceBb * 2, 1),
-          round(targetBetBb + toleranceBb * 3.5, 1),
+          displayedTargetPercent,
+          round(Math.max(0.1, displayedTargetPercent - percentTolerance * 2), 1),
+          round(displayedTargetPercent + percentTolerance * 2, 1),
+          round(displayedTargetPercent + percentTolerance * 3.5, 1),
         ],
-        "bb",
+        "percent",
         rng,
       )
     : undefined;
@@ -324,22 +335,23 @@ function generateTransfer(options: Required<QuestionGenerationOptions>): Questio
     prompt: `${potBb}bb POT · ${effectiveStackBb}bb EFFECTIVE`,
     instruction: `${streets === 3 ? "FLOP" : "TURN"} — commit your bet`,
     responseMode: choices ? "choice" : "numeric",
-    expectedAnswer: targetBetBb,
-    tolerance: toleranceBb,
-    unit: "bb",
+    expectedAnswer: targetPercent,
+    tolerance: percentTolerance,
+    unit: "percent",
+    acceptedUnits: ["percent", "bb"],
     choices,
     context: {
       spr: actualSpr,
       streetsRemaining: streets,
       potBb,
       effectiveStackBb,
-      targetPercent: percent,
+      targetPercent,
       targetBetBb,
       nearestAnchorSpr: nearestAnchor(actualSpr, streets).spr,
       landmark,
       line: streetSchedule(potBb, effectiveStackBb, streets),
     },
-    explanation: `${effectiveStackBb} ÷ ${potBb} ≈ ${round(actualSpr, 1)} SPR; ${round(percent)}% pot is ${targetBetBb}bb.`,
+    explanation: `${effectiveStackBb} ÷ ${potBb} ≈ ${round(actualSpr, 1)} SPR; ${round(targetPercent)}% pot is ${targetBetBb}bb.`,
     timeTargetMs: Math.round(7_000 - options.difficulty * 3_100),
   };
 }
@@ -562,9 +574,46 @@ const normaliseText = (value: string): string =>
     .replace(/\s+/g, "");
 
 export function evaluateAnswer(
-  question: Pick<Question, "expectedAnswer" | "tolerance">,
+  question: Pick<Question, "expectedAnswer" | "tolerance"> & Partial<Pick<Question, "type" | "unit" | "context">>,
   response: AnswerValue,
+  answerUnit?: LiveTableAnswerUnit,
 ): AnswerEvaluation {
+  if (question.type === "transfer" && typeof question.expectedAnswer === "number") {
+    const numericResponse =
+      typeof response === "number"
+        ? response
+        : Number(String(response).trim().replace(/%|bb/gi, ""));
+    const inferredUnit: LiveTableAnswerUnit = answerUnit
+      ?? (typeof response === "string" && /bb\s*$/i.test(response.trim()) ? "bb" : question.unit === "bb" ? "bb" : "percent");
+    const pot = question.context?.potBb;
+    if (!Number.isFinite(numericResponse) || (inferredUnit === "bb" && (!Number.isFinite(pot) || Number(pot) <= 0))) {
+      return {
+        correct: false,
+        response,
+        expected: question.expectedAnswer,
+        numericError: null,
+        errorDirection: "conceptual",
+        submittedValue: response,
+        responseUnit: inferredUnit,
+        responsePercent: null,
+      };
+    }
+    const responsePercent = inferredUnit === "bb"
+      ? numericResponse < 0 ? (numericResponse / Number(pot)) * 100 : bbToPercent(Number(pot), numericResponse)
+      : numericResponse;
+    const numericError = responsePercent - question.expectedAnswer;
+    const correct = Math.abs(numericError) <= question.tolerance + 1e-9;
+    return {
+      correct,
+      response: responsePercent,
+      expected: question.expectedAnswer,
+      numericError,
+      errorDirection: correct ? "none" : numericError < 0 ? "low" : "high",
+      submittedValue: numericResponse,
+      responseUnit: inferredUnit,
+      responsePercent,
+    };
+  }
   if (typeof question.expectedAnswer === "number") {
     const numericResponse =
       typeof response === "number"

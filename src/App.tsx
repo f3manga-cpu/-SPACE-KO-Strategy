@@ -18,6 +18,7 @@ import {
   type AnswerValue,
   type Attempt,
   type Confidence,
+  type LiveTableAnswerUnit,
   type Profile,
   type Question,
   type QuestionType,
@@ -30,6 +31,7 @@ import { CommandDeck } from './screens/CommandDeck';
 import { SectorGrid } from './screens/SectorGrid';
 import { AnchorGrid } from './screens/AnchorGrid';
 import { Records } from './screens/Records';
+import { Academy } from './screens/Academy';
 import { GameScreen, type GradeFeedback } from './game/GameScreen';
 import { Onboarding } from './game/Onboarding';
 import { RunResults } from './game/RunResults';
@@ -110,21 +112,21 @@ function feedbackFor(question: Question, evaluation: ReturnType<typeof evaluateA
   const causalSizing = question.unit === 'percent' || question.type === 'transfer';
   let lineStatus: GradeFeedback['lineStatus'] = evaluation.correct ? 'fit' : evaluation.errorDirection === 'low' ? 'residue' : 'early';
   let stackDeltaBb = 0;
-  if (causalSizing && typeof evaluation.response === 'number') {
+  const selectedPercent = question.type === 'transfer' ? evaluation.responsePercent : typeof evaluation.response === 'number' ? evaluation.response : null;
+  if (causalSizing && typeof selectedPercent === 'number' && Number.isFinite(selectedPercent) && selectedPercent >= 0) {
     const pot = question.context.potBb ?? 10;
     const stack = question.context.effectiveStackBb ?? pot * (question.context.spr ?? 4);
-    const selectedPercent = question.type === 'transfer' ? evaluation.response / pot * 100 : evaluation.response;
     const outcome = analyseLine(pot, stack, question.context.streetsRemaining ?? 3, selectedPercent / 100);
     lineStatus = evaluation.correct ? 'fit' : outcome.status === 'residue' ? 'residue' : 'early';
     stackDeltaBb = outcome.stackDelta;
   }
   const expected = typeof evaluation.expected === 'number' ? Math.round(evaluation.expected * 10) / 10 : evaluation.expected;
-  const answerUnit = question.unit === 'percent' ? '%' : question.unit === 'bb' ? 'bb' : '';
+  const answerUnit = question.type === 'transfer' ? '%' : question.unit === 'percent' ? '%' : question.unit === 'bb' ? 'bb' : '';
   const headline = causalSizing
-    ? evaluation.correct ? 'Line fit' : lineStatus === 'residue' ? `${stackDeltaBb.toFixed(1)}bb remains` : 'Stack forced in too soon'
+    ? evaluation.correct ? question.type === 'transfer' ? 'Locked' : 'Line fit' : lineStatus === 'residue' ? `${stackDeltaBb.toFixed(1)}bb remains` : 'Stack forced in too soon'
     : evaluation.correct ? 'Signal locked' : question.type === 'spr-snap' ? 'Ratio lock missed' : question.type === 'root-reactor' ? 'Reactor sequence diverged' : 'Discrimination missed';
   const detail = evaluation.correct
-    ? causalSizing ? `Correct: ${expected}${answerUnit}. The selected line and geometric line converge.` : `Correct: ${expected}${answerUnit}. The retrieval signal is verified.`
+    ? causalSizing ? question.type === 'transfer' ? 'Percentage strategy and BB table action resolve to the same geometric bet.' : `Correct: ${expected}${answerUnit}. The selected line and geometric line converge.` : `Correct: ${expected}${answerUnit}. The retrieval signal is verified.`
     : causalSizing
       ? evaluation.errorDirection === 'low'
         ? 'Your input was too low. The final gate closes before the effective stack is absorbed.'
@@ -134,7 +136,21 @@ function feedbackFor(question: Question, evaluation: ReturnType<typeof evaluateA
         : question.type === 'root-reactor'
           ? 'Reconstruct DOUBLE → +1 → ROOT → −1 → HALF before calculating again.'
           : 'Re-read the available runway before choosing the pressure class.';
-  return { correct: evaluation.correct, score: Math.max(0, score), response, expected: evaluation.expected, explanation: question.explanation, headline, detail, lineStatus, stackDeltaBb, breakdown, causalSizing };
+  return {
+    correct: evaluation.correct,
+    score: Math.max(0, score),
+    response: question.type === 'transfer' ? evaluation.submittedValue ?? response : response,
+    expected: evaluation.expected,
+    explanation: question.explanation,
+    headline,
+    detail,
+    lineStatus,
+    stackDeltaBb,
+    breakdown,
+    causalSizing,
+    responseUnit: evaluation.responseUnit,
+    responsePercent: evaluation.responsePercent,
+  };
 }
 
 export default function App() {
@@ -251,12 +267,12 @@ export default function App() {
     return () => window.clearInterval(interval);
   }, [finalizeRun, run?.id, run?.mission.mode, run?.result]);
 
-  const submitAnswer = useCallback((response: AnswerValue, confidence: Confidence | null) => {
+  const submitAnswer = useCallback((response: AnswerValue, confidence: Confidence | null, answerUnit?: LiveTableAnswerUnit) => {
     const active = runRef.current;
     const currentProfile = profileRef.current;
     if (!active || active.feedback || active.result || !currentProfile) return;
     const responseTimeMs = Math.max(80, Math.round(performance.now() - active.questionStartedAt));
-    const evaluation = evaluateAnswer(active.question, response);
+    const evaluation = evaluateAnswer(active.question, response, answerUnit);
     const concept = currentProfile.concepts[active.question.primaryConceptId];
     const retentionGapMs = concept?.lastReviewedAt ? Date.now() - concept.lastReviewedAt : 0;
     const breakdown = calculateAttemptScore({ correct: evaluation.correct, difficulty: active.question.difficulty, scaffoldLevel: active.question.scaffoldLevel, responseTimeMs, timeTargetMs: active.question.timeTargetMs, retentionGapMs, spacingIntervalMs: concept?.spacingIntervalMs, confidence, streak: active.streak, modeMultiplier: modeMultiplier(active.mission) });
@@ -273,7 +289,7 @@ export default function App() {
     const streak = evaluation.correct ? active.streak + 1 : 0;
     const lives = active.lives === null ? null : Math.max(0, active.lives - (evaluation.correct ? 0 : 1));
     const terminate = (active.mission.mode === 'perfect-ten' && !evaluation.correct) || lives === 0;
-    const feedback = feedbackFor(active.question, evaluation, evaluation.response, breakdown.total, breakdown);
+    const feedback = feedbackFor(active.question, evaluation, response, breakdown.total, breakdown);
     const next: ActiveRun = {
       ...active, score: Math.max(0, active.score + breakdown.total), correct: active.correct + (evaluation.correct ? 1 : 0), streak, longestStreak: Math.max(active.longestStreak, streak), lives,
       attemptIds: [...active.attemptIds, attempt.id], conceptIds: [...active.conceptIds, ...active.question.conceptIds], responseTimes: [...active.responseTimes, responseTimeMs], splits: [...active.splits, Date.now() - active.startedAt],
@@ -331,6 +347,7 @@ export default function App() {
       {screen === 'sectors' && <SectorGrid profile={profile} onLaunch={launch} />}
       {screen === 'grid' && <AnchorGrid profile={profile} onLaunch={launch} />}
       {screen === 'records' && <Records profile={profile} />}
+      {screen === 'academy' && <Academy />}
       <BottomNav active={screen} onChange={setScreen} />
       {settingsOpen && <SettingsDrawer profile={profile} onClose={() => setSettingsOpen(false)} onChange={changeSettings} onReset={() => setResetOpen(true)} />}
       {resetOpen && <div className="modal-backdrop"><section className="confirm-reset game-frame" role="alertdialog" aria-modal="true"><span className="eyebrow">DESTRUCTIVE COMMAND</span><h2>Erase the local pilot profile?</h2><p>Mastery, attempts, ranks and personal records on this browser will be removed permanently.</p><div><button type="button" className="action-secondary" onClick={() => setResetOpen(false)}>CANCEL</button><button type="button" className="danger-confirm" onClick={reset}>ERASE PROFILE</button></div></section></div>}

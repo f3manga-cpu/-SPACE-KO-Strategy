@@ -49,6 +49,7 @@ const navItems: Array<{ id: NavScreen; label: string; glyph: string }> = [
   { id: 'sectors', label: 'Sectors', glyph: '⬡' },
   { id: 'grid', label: 'Anchor Grid', glyph: '⌘' },
   { id: 'records', label: 'Records', glyph: '⌁' },
+  { id: 'academy', label: 'Learn', glyph: '?' },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { geometricBetFraction, sprFromPotStack, streetScheduleForFraction } from '../core/geometry';
 
 export interface SceneResolution {
   id: number;
@@ -23,28 +24,49 @@ interface Readout {
   street: string;
   pot: number;
   stack: number;
+  stage: number;
   state: 'ready' | 'running' | 'fit' | 'residue' | 'early';
 }
 
 const streetNames = ['FLOP', 'TURN', 'RIVER'];
 
-function lineAt(pot: number, stack: number, streets: number, fraction: number, stage: number) {
-  let currentPot = pot;
-  let remaining = stack;
-  for (let index = 0; index < Math.min(stage, streets); index += 1) {
-    const bet = Math.min(remaining, currentPot * fraction);
-    currentPot += bet * 2;
-    remaining -= bet;
-  }
-  return { pot: currentPot, stack: Math.max(0, remaining) };
-}
+const streetName = (streets: 2 | 3, index: number) =>
+  streetNames[(streets === 2 ? 1 : 0) + index] ?? `STREET ${index + 1}`;
+
+const formatBb = (value: number) => value.toFixed(1);
+const formatPercent = (value: number) => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
+};
 
 export function StackoffScene({ pot, stack, streets, resolution, reducedMotion = false, compact = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneApi = useRef<{ set: (potRatio: number, stackRatio: number, gate: number, state: Readout['state'], streetCount: number) => void; dispose: () => void } | null>(null);
   const [fallback, setFallback] = useState(false);
-  const [readout, setReadout] = useState<Readout>({ street: 'LINE ARMED', pot, stack, state: 'ready' });
+  const [readout, setReadout] = useState<Readout>({ street: 'LINE ARMED', pot, stack, stage: 0, state: 'ready' });
+
+  const line = useMemo(() => {
+    if (!resolution) return null;
+    const targetFraction = geometricBetFraction(
+      sprFromPotStack(resolution.pot, resolution.stack),
+      resolution.streets,
+    );
+    const submittedFraction = Number.isFinite(resolution.selectedPercent)
+      ? Math.max(0, resolution.selectedPercent / 100)
+      : 0;
+    const playbackFraction = resolution.correct ? targetFraction : submittedFraction;
+    return {
+      targetPercent: targetFraction * 100,
+      playbackPercent: playbackFraction * 100,
+      schedule: streetScheduleForFraction(
+        resolution.pot,
+        resolution.stack,
+        resolution.streets,
+        playbackFraction,
+      ),
+    };
+  }, [resolution]);
 
   useEffect(() => {
     let cancelled = false;
@@ -238,39 +260,48 @@ export function StackoffScene({ pot, stack, streets, resolution, reducedMotion =
 
   useEffect(() => {
     if (!resolution) {
-      setReadout({ street: 'LINE ARMED', pot, stack, state: 'ready' });
+      setReadout({ street: 'LINE ARMED', pot, stack, stage: 0, state: 'ready' });
       sceneApi.current?.set(Math.min(1, pot / (pot + stack * 2)), 1, -1, 'ready', streets);
       return;
     }
+    if (!line) return;
     const duration = reducedMotion ? 120 : 1_650;
     const start = performance.now();
     let previousStage = -1;
     let animationFrame = 0;
-    const targetFinal = pot + stack * 2;
+    const targetFinal = resolution.pot + resolution.stack * 2;
+    const finalState: Readout['state'] = resolution.correct
+      ? 'fit'
+      : resolution.selectedPercent < line.targetPercent
+        ? 'residue'
+        : 'early';
     const animate = (time: number) => {
       const progress = Math.min(1, (time - start) / duration);
       const stage = Math.min(resolution.streets, Math.floor(progress * resolution.streets + 0.001));
       if (stage !== previousStage || progress === 1) {
         previousStage = stage;
-        const line = lineAt(resolution.pot, resolution.stack, resolution.streets, resolution.selectedPercent / 100, stage);
-        let state: Readout['state'] = progress < 1 ? 'running' : resolution.correct ? 'fit' : line.stack > resolution.stack * 0.025 ? 'residue' : 'early';
+        const point = stage > 0 ? line.schedule[stage - 1] : undefined;
+        const currentPot = point?.potAfterCall ?? resolution.pot;
+        const currentStack = point?.stackRemaining ?? resolution.stack;
+        const state: Readout['state'] = progress < 1 ? 'running' : finalState;
         const streetIndex = Math.max(0, Math.min(2, (resolution.streets === 2 ? 1 : 0) + Math.min(stage, resolution.streets - 1)));
         setReadout({
           street: progress === 1 ? state === 'fit' ? 'GEOMETRY LOCK' : state === 'residue' ? 'RUNWAY EXHAUSTED' : 'STACK EXHAUSTED EARLY' : streetNames[streetIndex],
-          pot: line.pot,
-          stack: line.stack,
+          pot: currentPot,
+          stack: currentStack,
+          stage,
           state,
         });
-        sceneApi.current?.set(Math.min(1, line.pot / targetFinal), resolution.stack ? line.stack / resolution.stack : 0, Math.min(stage, resolution.streets - 1), state, resolution.streets);
+        sceneApi.current?.set(Math.min(1, currentPot / targetFinal), resolution.stack ? currentStack / resolution.stack : 0, Math.min(stage, resolution.streets - 1), state, resolution.streets);
       }
       if (progress < 1) animationFrame = requestAnimationFrame(animate);
     };
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
-  }, [pot, reducedMotion, resolution, stack, streets]);
+  }, [line, pot, reducedMotion, resolution, stack, streets]);
 
   return (
-    <div className={`stackoff-scene ${compact ? 'stackoff-scene--compact' : ''} is-${readout.state}`} ref={hostRef} data-testid="stackoff-3d">
+    <div className={`stackoff-scene ${compact ? 'stackoff-scene--compact' : ''} ${line ? 'has-schedule' : ''} is-${readout.state}`} ref={hostRef} data-testid="stackoff-3d">
       {!fallback && <canvas ref={canvasRef} aria-label="Interactive three-dimensional stackoff line. Drag to rotate." />}
       {fallback && (
         <div className="scene-fallback" data-testid="webgl-fallback">
@@ -284,6 +315,42 @@ export function StackoffScene({ pot, stack, streets, resolution, reducedMotion =
       <div className="scene-readout scene-readout--pot"><span>LIVE POT</span><strong>{readout.pot.toFixed(1)}<small>bb</small></strong></div>
       <div className="scene-status" aria-live="polite"><i />{readout.street}</div>
       <div className="scene-drag-hint" aria-hidden="true">DRAG TO INSPECT</div>
+      {resolution && line && (
+        <div className="scene-action-hud" data-testid="stackoff-schedule">
+          <div className="scene-action-hud__heading">
+            <span>{resolution.correct ? 'GEOMETRIC LINE' : 'YOUR LINE // CONSEQUENCE'}</span>
+            <strong>{formatPercent(line.playbackPercent)}% POT</strong>
+            <em data-testid="stackoff-target">GEOMETRIC TARGET {formatPercent(line.targetPercent)}%</em>
+          </div>
+          <div className={`scene-street-grid scene-street-grid--${resolution.streets}`}>
+            {line.schedule.map((point, index) => {
+              const phase = readout.stage > index ? 'is-complete' : readout.stage === index ? 'is-active' : 'is-pending';
+              const name = streetName(resolution.streets, index);
+              return (
+                <article
+                  className={`scene-street-card ${phase}`}
+                  data-testid="stackoff-street"
+                  data-street={name.toLowerCase()}
+                  key={point.streetIndex}
+                  aria-label={`${name}: pot before ${formatBb(point.potBefore)} big blinds, ${formatPercent(point.betPercent)} percent pot, hero bets ${formatBb(point.heroBetBb)} big blinds, villain calls ${formatBb(point.villainCallBb)} big blinds, pot after call ${formatBb(point.potAfterCall)} big blinds, ${formatBb(point.stackRemaining)} big blinds remaining`}
+                >
+                  <header><span>0{point.streetIndex}</span><strong>{name}</strong><em>{formatPercent(line.playbackPercent)}%</em></header>
+                  <div className="scene-pot-flow">
+                    <span><small>POT BEFORE</small><b>{formatBb(point.potBefore)}</b></span>
+                    <i>→</i>
+                    <span><small>POT AFTER CALL</small><b>{formatBb(point.potAfterCall)}</b></span>
+                  </div>
+                  <div className="scene-contributions">
+                    <span><small>HERO BET</small><b>{formatBb(point.heroBetBb)}<i>bb</i></b></span>
+                    <span><small>VILLAIN CALL</small><b>{formatBb(point.villainCallBb)}<i>bb</i></b></span>
+                  </div>
+                  <footer><span>STACK REMAINING</span><strong>{formatBb(point.stackRemaining)}<small>bb</small></strong></footer>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

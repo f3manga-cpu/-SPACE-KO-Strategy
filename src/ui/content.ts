@@ -1,6 +1,6 @@
 import type { GameMode, QuestionType, RankId } from '../core/types';
 
-export type NavScreen = 'command' | 'sectors' | 'grid' | 'records';
+export type NavScreen = 'command' | 'sectors' | 'grid' | 'records' | 'academy';
 
 export interface MissionSpec {
   id: string;

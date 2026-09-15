@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { AnswerValue, Confidence, Question, ScoreBreakdown } from '../core/types';
+import { bbToPercent, percentToBb } from '../core/geometry';
+import type { AnswerValue, Confidence, LiveTableAnswerUnit, Question, ScoreBreakdown } from '../core/types';
 import type { MissionSpec } from '../ui/content';
 import { StackoffScene, type SceneResolution } from './StackoffScene';
 import { audio } from './audio';
@@ -18,6 +19,8 @@ export interface GradeFeedback {
   newBest?: string | null;
   masteryEvent?: string | null;
   causalSizing?: boolean;
+  responseUnit?: LiveTableAnswerUnit;
+  responsePercent?: number | null;
 }
 
 export interface GameScreenProps {
@@ -33,7 +36,7 @@ export interface GameScreenProps {
   ghostDeltaMs?: number | null;
   remainingMs?: number | null;
   reducedMotion: boolean;
-  onSubmit: (answer: AnswerValue, confidence: Confidence | null) => void;
+  onSubmit: (answer: AnswerValue, confidence: Confidence | null, answerUnit?: LiveTableAnswerUnit) => void;
   onNext: () => void;
   onExit: () => void;
 }
@@ -173,6 +176,68 @@ function NumericControl({ question, value, onChange, disabled }: { question: Que
   );
 }
 
+function TableBetControl({ question, unit, value, onUnitChange, onChange, disabled }: {
+  question: Question;
+  unit: LiveTableAnswerUnit;
+  value: AnswerValue | null;
+  onUnitChange: (unit: LiveTableAnswerUnit) => void;
+  onChange: (value: AnswerValue) => void;
+  disabled: boolean;
+}) {
+  const pot = question.context.potBb ?? 10;
+  const effectiveStack = question.context.effectiveStackBb ?? pot * 4;
+  const numericValue = typeof value === 'number' ? value : null;
+  const counterpart = numericValue === null || !Number.isFinite(numericValue) || numericValue < 0
+    ? null
+    : unit === 'percent'
+      ? percentToBb(pot, numericValue)
+      : bbToPercent(pot, numericValue);
+  const maximum = unit === 'percent' ? 150 : Math.max(1, Math.min(effectiveStack, pot * 1.5));
+
+  return (
+    <div className="table-bet-control" data-testid="live-table-answer">
+      <div className="unit-switch" role="group" aria-label="Bet answer unit">
+        {(['percent', 'bb'] as const).map((option) => (
+          <button
+            type="button"
+            key={option}
+            className={unit === option ? 'active' : ''}
+            aria-pressed={unit === option}
+            disabled={disabled}
+            onClick={() => onUnitChange(option)}
+          >
+            <span>{option === 'percent' ? '% POT' : 'BB'}</span>
+            <small>{option === 'percent' ? 'STRATEGY' : 'TABLE ACTION'}</small>
+          </button>
+        ))}
+      </div>
+      <label className="table-number-entry">
+        <span>COMMIT ONE REPRESENTATION</span>
+        <div>
+          <input
+            aria-label={unit === 'percent' ? 'Bet size in percent of pot' : 'Bet size in big blinds'}
+            inputMode="decimal"
+            type="number"
+            min={0}
+            max={maximum}
+            step={unit === 'percent' ? 1 : 0.1}
+            value={value === null ? '' : String(value)}
+            disabled={disabled}
+            onChange={(event) => onChange(event.target.value === '' ? '' : Number(event.target.value))}
+            placeholder={unit === 'percent' ? '54' : '7.2'}
+          />
+          <i>{unit === 'percent' ? '% POT' : 'BB'}</i>
+        </div>
+      </label>
+      <div className="representation-hint" aria-live="polite">
+        <span>{unit === 'percent' ? 'STRATEGY REPRESENTATION' : 'TABLE-ACTION REPRESENTATION'}</span>
+        <i>↔</i>
+        <strong>{counterpart === null ? 'SAME BET' : unit === 'percent' ? `${counterpart.toFixed(1)} BB` : `${Math.round(counterpart * 10) / 10}% POT`}</strong>
+      </div>
+    </div>
+  );
+}
+
 function ChoiceControl({ question, value, onChange, disabled }: { question: Question; value: AnswerValue | null; onChange: (value: AnswerValue) => void; disabled: boolean }) {
   return (
     <div className={`answer-bank answer-bank--${Math.min(5, question.choices?.length ?? 0)}`}>
@@ -188,13 +253,38 @@ function ConfidenceControl({ value, onChange, disabled }: { value: Confidence | 
 }
 
 function FeedbackPanel({ feedback, question, onNext, fastMode }: { feedback: GradeFeedback; question: Question; onNext: () => void; fastMode: boolean }) {
-  const suffix = question.unit === 'percent' ? '%' : question.unit === 'bb' ? 'bb' : '';
+  const isTable = question.type === 'transfer';
+  const suffix = isTable ? feedback.responseUnit === 'bb' ? 'bb' : '%' : question.unit === 'percent' ? '%' : question.unit === 'bb' ? 'bb' : '';
   const responseLabel = typeof feedback.response === 'number' ? `${Math.round(feedback.response * 10) / 10}${suffix}` : String(feedback.response).replaceAll('|', ' → ');
-  const targetLabel = typeof feedback.expected === 'number' ? `${Math.round(feedback.expected * 10) / 10}${suffix}` : String(feedback.expected).replaceAll('|', ' → ');
+  const pot = question.context.potBb ?? 10;
+  const stack = question.context.effectiveStackBb ?? pot * (question.context.spr ?? 4);
+  const targetPercent = question.context.targetPercent ?? (typeof feedback.expected === 'number' ? feedback.expected : 0);
+  const targetBetBb = percentToBb(pot, targetPercent);
+  const targetPercentLabel = Math.abs(targetPercent - Math.round(targetPercent)) < 0.15 ? String(Math.round(targetPercent)) : targetPercent.toFixed(1);
+  const targetLabel = isTable
+    ? `${targetPercentLabel}% = ${targetBetBb.toFixed(1)}bb`
+    : typeof feedback.expected === 'number' ? `${Math.round(feedback.expected * 10) / 10}${suffix}` : String(feedback.expected).replaceAll('|', ' → ');
   return (
     <div className={`resolution-panel ${feedback.correct ? 'is-correct' : 'is-wrong'}`} data-testid="feedback-panel" aria-live="assertive">
+      {isTable && (
+        <div className="table-lock" data-testid="live-table-feedback">
+          <span>{feedback.correct ? 'LOCKED' : 'GEOMETRIC CORRECTION'}</span>
+          <strong>{targetPercentLabel}<small>% POT</small><i>=</i>{targetBetBb.toFixed(1)}<small>BB</small></strong>
+          <em>STRATEGY REPRESENTATION ↔ TABLE ACTION</em>
+        </div>
+      )}
       <div className="resolution-panel__signal"><span>{feedback.correct ? feedback.causalSizing ? 'CONVERGENCE CONFIRMED' : 'RETRIEVAL VERIFIED' : feedback.causalSizing ? feedback.lineStatus === 'residue' ? 'RUNWAY EXHAUSTED' : 'STACK EXHAUSTED EARLY' : 'RETRIEVAL MISMATCH'}</span><strong>{feedback.headline}</strong><p>{feedback.detail}</p></div>
       <div className="line-compare"><div><span>YOUR LINE</span><strong>{responseLabel}</strong></div><i>→</i><div><span>GEOMETRIC LINE</span><strong>{targetLabel}</strong></div></div>
+      {isTable && (
+        <div className="table-debrief" aria-label="Live Table decision context">
+          <div><span>CURRENT POT</span><strong>{pot.toFixed(1)}<small>BB</small></strong></div>
+          <div><span>EFFECTIVE STACK</span><strong>{stack.toFixed(1)}<small>BB</small></strong></div>
+          <div><span>SPR</span><strong>{(question.context.spr ?? stack / pot).toFixed(1)}</strong></div>
+          <div><span>STREETS REMAINING</span><strong>{question.context.streetsRemaining}</strong></div>
+          <div><span>GEOMETRIC SIZING</span><strong>{targetPercentLabel}<small>%</small></strong></div>
+          <div><span>ACTUAL BET</span><strong>{targetBetBb.toFixed(1)}<small>BB</small></strong></div>
+        </div>
+      )}
       <div className="causal-note"><i>{feedback.correct ? '✓' : '!'}</i><p>{feedback.explanation}</p></div>
       <div className="score-packet"><span>+{feedback.score.toLocaleString()}</span><small>DIFFICULTY ×{feedback.breakdown.difficulty.toFixed(2)}</small><small>INDEPENDENCE ×{feedback.breakdown.independence.toFixed(2)}</small><small>RETENTION ×{feedback.breakdown.retention.toFixed(2)}</small></div>
       {(feedback.newBest || feedback.masteryEvent) && <div className="event-stamp"><span>{feedback.newBest ? 'NEW PERSONAL RECORD' : 'NODE STATE CHANGED'}</span><strong>{feedback.newBest ?? feedback.masteryEvent}</strong></div>}
@@ -204,8 +294,9 @@ function FeedbackPanel({ feedback, question, onNext, fastMode }: { feedback: Gra
 }
 
 export function GameScreen({ mission, question, questionNumber, totalQuestions, score, streak, lives, askConfidence, feedback, ghostDeltaMs, remainingMs, reducedMotion, onSubmit, onNext, onExit }: GameScreenProps) {
-  const defaultDial = question.type === 'transfer' ? Math.round((question.context.potBb ?? 10) * 5) / 10 : question.type === 'precision' ? 50 : null;
+  const defaultDial = question.type === 'precision' ? 50 : null;
   const [answer, setAnswer] = useState<AnswerValue | null>(defaultDial);
+  const [tableUnit, setTableUnit] = useState<LiveTableAnswerUnit>('percent');
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [pulse, setPulse] = useState(0);
   const previousQuestion = useRef(question.id);
@@ -216,7 +307,8 @@ export function GameScreen({ mission, question, questionNumber, totalQuestions, 
   useEffect(() => {
     if (previousQuestion.current === question.id) return;
     previousQuestion.current = question.id;
-    setAnswer(question.type === 'transfer' ? Math.round((question.context.potBb ?? 10) * 5) / 10 : question.type === 'precision' ? 50 : null);
+    setAnswer(question.type === 'precision' ? 50 : null);
+    setTableUnit('percent');
     setConfidence(null);
     setPulse((current) => current + 1);
   }, [question]);
@@ -237,24 +329,24 @@ export function GameScreen({ mission, question, questionNumber, totalQuestions, 
         return;
       }
       const choiceIndex = Number(event.key) - 1;
-      if (Number.isInteger(choiceIndex) && choiceIndex >= 0 && question.choices?.[choiceIndex]) {
+      if (question.type !== 'transfer' && Number.isInteger(choiceIndex) && choiceIndex >= 0 && question.choices?.[choiceIndex]) {
         event.preventDefault();
         audio.cue('select');
         setAnswer(question.choices[choiceIndex]!.value);
       } else if (event.key === 'Enter' && isValid) {
         event.preventDefault();
-        onSubmit(answer!, confidence);
+        onSubmit(answer!, confidence, question.type === 'transfer' ? tableUnit : undefined);
       }
     };
     window.addEventListener('keydown', handleKeyboard);
     return () => window.removeEventListener('keydown', handleKeyboard);
-  }, [answer, confidence, fastMode, feedback, isValid, onNext, onSubmit, question.choices]);
+  }, [answer, confidence, fastMode, feedback, isValid, onNext, onSubmit, question.choices, question.type, tableUnit]);
 
   const resolution = useMemo<SceneResolution | null>(() => {
     if (!feedback) return null;
     const pot = question.context.potBb ?? 10;
     const stack = question.context.effectiveStackBb ?? pot * (question.context.spr ?? 4);
-    const selected = typeof feedback.response === 'number' && question.type === 'transfer' ? feedback.response / pot * 100 : typeof feedback.response === 'number' && question.unit === 'percent' ? feedback.response : ((question.context.targetPercent ?? Number(question.expectedAnswer)) || 50);
+    const selected = question.type === 'transfer' && typeof feedback.responsePercent === 'number' ? feedback.responsePercent : typeof feedback.response === 'number' && question.unit === 'percent' ? feedback.response : ((question.context.targetPercent ?? Number(question.expectedAnswer)) || 50);
     const target = question.context.targetPercent ?? (typeof question.expectedAnswer === 'number' && question.unit === 'percent' ? question.expectedAnswer : selected);
     return { id: pulse, pot, stack, streets: question.context.streetsRemaining ?? 3, selectedPercent: selected, targetPercent: target, correct: feedback.correct };
   }, [feedback, pulse, question]);
@@ -271,6 +363,7 @@ export function GameScreen({ mission, question, questionNumber, totalQuestions, 
   };
 
   const renderControl = () => {
+    if (question.type === 'transfer') return <TableBetControl question={question} unit={tableUnit} value={answer} onUnitChange={(unit) => { if (unit === tableUnit) return; audio.cue('select'); setTableUnit(unit); setAnswer(null); }} onChange={setAnswer} disabled={!!feedback} />;
     if (question.type === 'root-reactor' && question.responseMode !== 'sequence') return <ReactorNumericControl question={question} value={answer} onChange={setAnswer} disabled={!!feedback} />;
     if (question.responseMode === 'sequence') return <ReactorControl value={answer} onChange={setAnswer} disabled={!!feedback} />;
     if (question.choices?.length) return <ChoiceControl question={question} value={answer} onChange={setAnswer} disabled={!!feedback} />;
@@ -301,8 +394,8 @@ export function GameScreen({ mission, question, questionNumber, totalQuestions, 
               <div className="decision-heading"><span>COMMIT VECTOR</span><small>{question.scaffoldLevel === 0 ? 'NO ASSISTANCE' : `SCAFFOLD ${question.scaffoldLevel}`}</small></div>
               {renderControl()}
               {askConfidence && <ConfidenceControl value={confidence} onChange={setConfidence} disabled={false} />}
-              <button type="button" className="commit-control" disabled={!isValid} onClick={() => isValid && onSubmit(answer!, confidence)}><span>{question.type === 'transfer' ? 'DEPLOY BET' : 'LOCK ANSWER'}</span><i>HOLD THE LINE →</i></button>
-              <div className="input-shortcuts">KEYBOARD: 1–5 SELECT <i /> ENTER COMMIT</div>
+              <button type="button" className="commit-control" disabled={!isValid} onClick={() => isValid && onSubmit(answer!, confidence, question.type === 'transfer' ? tableUnit : undefined)}><span>{question.type === 'transfer' ? 'DEPLOY BET' : 'LOCK ANSWER'}</span><i>HOLD THE LINE →</i></button>
+              <div className="input-shortcuts">{question.type === 'transfer' ? <>TYPE ONE VALUE <i /> UNIT SWITCH KEEPS THE CLOCK RUNNING <i /> ENTER COMMIT</> : <>KEYBOARD: 1–5 SELECT <i /> ENTER COMMIT</>}</div>
             </>
           ) : <FeedbackPanel feedback={feedback} question={question} onNext={onNext} fastMode={fastMode} />}
         </section>

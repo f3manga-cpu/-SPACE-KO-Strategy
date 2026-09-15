@@ -86,7 +86,7 @@ test('first contact teaches the SPR 4 contrast and persists mastery', async ({ p
   expect(errors).toEqual([]);
 });
 
-test('retrieval, causal error feedback, root reconstruction and 3D transfer all work', async ({ page }) => {
+test('retrieval, causal error feedback and root reconstruction all work', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -118,7 +118,15 @@ test('retrieval, causal error feedback, root reconstruction and 3D transfer all 
   await page.getByRole('button', { name: /LOCK ANSWER/ }).click();
   await expect(page.getByTestId('feedback-panel')).toContainText('RETRIEVAL VERIFIED');
   await page.locator('.exit-control').click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  expect(errors).toEqual([]);
+});
 
+test('Live Table accepts percent and BB as one timed geometric action', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  await onboard(page);
   await page.getByRole('button', { name: 'Sectors' }).click();
   await page.locator('[data-mission="table-zero"]').click();
   await expect(page.getByTestId('table-read')).toBeVisible();
@@ -134,26 +142,48 @@ test('retrieval, causal error feedback, root reconstruction and 3D transfer all 
   const pot = Number((await page.locator('.table-pot strong').innerText()).replace(/[^0-9.]/g, ''));
   const stack = Number((await page.locator('.table-seat--villain strong').innerText()).replace(/[^0-9.]/g, ''));
   const streets = (await page.locator('.street-badge').innerText()).includes('3 STREETS') ? 3 : 2;
-  const expectedBb = pot * ((Math.pow(1 + 2 * stack / pot, 1 / streets) - 1) / 2);
-  const choiceButtons = page.locator('.answer-bank button');
-  if (await choiceButtons.count()) {
-    const labels = await choiceButtons.locator('strong').allTextContents();
-    const selected = labels.map((label, index) => ({ index, delta: Math.abs(Number(label.replace(/[^0-9.]/g, '')) - expectedBb) })).sort((a, b) => a.delta - b.delta)[0]!;
-    expect(selected.delta).toBeLessThanOrEqual(0.11);
-    const selectedButton = choiceButtons.nth(selected.index);
-    await selectedButton.click({ force: true });
-    await expect(selectedButton).toHaveClass(/selected/);
-  } else {
-    await page.getByLabel('Bet amount in big blinds').evaluate((element, amount) => {
-      const input = element as HTMLInputElement;
-      input.value = String(amount);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }, expectedBb.toFixed(1));
-  }
+  const expectedPercent = ((Math.pow(1 + 2 * stack / pot, 1 / streets) - 1) / 2) * 100;
+  await expect(page.getByRole('button', { name: /% POT.*STRATEGY/i })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('Bet size in percent of pot').fill(expectedPercent.toFixed(4));
   await chooseConfidence(page);
   await page.getByRole('button', { name: /DEPLOY BET/ }).click({ force: true });
   await expect(page.getByTestId('feedback-panel')).toContainText('CONVERGENCE CONFIRMED');
+  await expect(page.getByTestId('live-table-feedback')).toContainText('% POT');
+  await expect(page.getByTestId('live-table-feedback')).toContainText('BB');
+  await expect(page.getByTestId('stackoff-schedule')).toContainText('HERO BET');
+  await expect(page.getByTestId('stackoff-schedule')).toContainText('VILLAIN CALL');
+  await expect(page.getByTestId('stackoff-street')).toHaveCount(streets);
+  await page.getByRole('button', { name: /NEXT RETRIEVAL/ }).click({ force: true });
+
+  const secondPot = Number((await page.locator('.table-pot strong').innerText()).replace(/[^0-9.]/g, ''));
+  const secondStack = Number((await page.locator('.table-seat--villain strong').innerText()).replace(/[^0-9.]/g, ''));
+  const secondStreets = (await page.locator('.street-badge').innerText()).includes('3 STREETS') ? 3 : 2;
+  const secondPercent = ((Math.pow(1 + 2 * secondStack / secondPot, 1 / secondStreets) - 1) / 2) * 100;
+  const secondBb = secondPot * secondPercent / 100;
+  await chooseConfidence(page);
+  await page.waitForTimeout(900);
+  await page.getByRole('button', { name: /^BB.*TABLE ACTION/i }).click();
+  await page.getByLabel('Bet size in big blinds').fill(secondBb.toFixed(4));
+  await page.getByRole('button', { name: /DEPLOY BET/ }).click({ force: true });
+  await expect(page.getByTestId('feedback-panel')).toContainText('CONVERGENCE CONFIRMED');
+  await expect(page.getByTestId('live-table-feedback')).toContainText('% POT');
+  await expect(page.getByTestId('live-table-feedback')).toContainText('BB');
+  await page.waitForTimeout(250);
+  const latestTransferLatency = await page.evaluate(() => {
+    const profile = JSON.parse(localStorage.getItem('geometry-reflex-forge:profile')!) as { attempts: Array<{ questionType: string; responseTimeMs: number }> };
+    return profile.attempts.filter((attempt) => attempt.questionType === 'transfer').at(-1)?.responseTimeMs ?? 0;
+  });
+  expect(latestTransferLatency).toBeGreaterThanOrEqual(800);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await page.locator('.exit-control').click();
+
+  await page.getByRole('button', { name: /Learn/i }).click();
+  await expect(page.locator('[data-screen="academy"]')).toBeVisible();
+  await expect(page.locator('[data-screen="academy"]')).toContainText(/effective stack/i);
+  await expect(page.locator('[data-screen="academy"]')).toContainText(/actual BB action/i);
+  await expect(page.locator('[data-screen="academy"]')).toContainText(/square root/i);
+  await expect(page.locator('[data-screen="academy"]')).toContainText(/cube root/i);
+  await expect(page.locator('[data-screen="academy"]')).toContainText('(1 + 2b)');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   expect(errors).toEqual([]);
 });

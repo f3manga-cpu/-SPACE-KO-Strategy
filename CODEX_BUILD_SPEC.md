@@ -1,14 +1,26 @@
-# Geometry Reflex Lab — Codex Build Specification
+# Geometry Reflex Forge — V5 Build Specification
 
 ## Product goal
 
-Rebuild this Streamlit app into a highly interactive educational trainer that makes geometric bet sizing in NLHE MTTs automatic rather than merely understandable.
+Evolve the deployed React/Vite trainer into a highly interactive learning game that makes geometric bet sizing in NLHE MTTs automatic rather than merely understandable.
 
 The user plays €10–€20 Winamax MTTs, especially SPACE KO, and already thinks in position and effective stacks. The learning target is the post-flop reflex:
 
-> effective stack → pot → SPR → streets remaining → geometric % pot → actual bb bet
+> effective stack → pot → SPR → streets remaining → geometric % → actual BB action
 
 The app must teach, drill, test, visualize, and reinforce this loop until the mapping is owned by the user.
+
+## V5 production contract
+
+The deployed application is the root React/Vite frontend: `index.html` loads `/src/main.tsx`, `src/App.tsx` owns the run state, and GitHub Pages publishes the generated `dist/` bundle. The older `forge-game/` frontend and the Streamlit files are retained as historical implementations; they are not the production path for V5.
+
+The training responsibilities are deliberately separate:
+
+- **Anchor Forge = percentage landmarks.** `SPR + streets → geometric %`; canonical rounded answers and their established tolerances remain unchanged.
+- **Root Reactor = reconstruction and understanding.** `DOUBLE → +1 → square/cube ROOT → −1 → HALF` explains why a sizing exists.
+- **Live Table / Table Zero = contextual execution.** `effective stack + pot + street → SPR → geometric % ↔ actual BB action` under one uninterrupted response timer.
+
+A Live Table answer may be committed in either `% POT` or `BB`. BB submissions are converted back with `submittedPct = submittedBB / pot × 100` and graded against the same percentage-point tolerance as a percentage submission. Unit choice does not change score, difficulty, latency targets, or concept history.
 
 ## Non-negotiable mathematical truth
 
@@ -23,7 +35,7 @@ Therefore:
 - 2 streets: `b = (sqrt(1 + 2*SPR) - 1) / 2`
 - 3 streets: `b = (cuberoot(1 + 2*SPR) - 1) / 2`
 
-The current `streamlit_app.py` uses an incorrect geometric-sizing expression based on `(pot + stack) / pot`. Replace it.
+The production canonical implementation lives in `src/core/geometry.ts`; UI components must consume it rather than reproduce the formula.
 
 Important anchor values:
 
@@ -109,7 +121,7 @@ Make this feel like a 3-minute pre-session ritual.
 - Use tabs or a similarly clear information architecture.
 - The drill screen should make the prompt visually dominant.
 - After feedback, a clear single “Next retrieval” action should advance the loop.
-- Session state may reset when the Streamlit session resets; persistence is optional, not required for V1.
+- Learning history, mastery, latency, rank, and records persist locally with backward-compatible profile migration.
 
 ## Required experiences
 
@@ -134,32 +146,23 @@ Inputs / drills based on actual values, for example:
 - streets = 3
 
 User must move through:
-`37 / 11.4 → SPR → geometric % → actual bb bet`
+`37 / 11.4 → SPR → geometric % → actual BB action`
 
-Include a live calculator and a transfer quiz mode.
+Table Zero accepts either the strategic percentage or its equivalent BB action; it never requires both.
 
 ### 5. Street-by-street stackoff visualization
 Given pot, effective stack and streets, show for every street:
 - pot before bet
-- bet in bb
-- bet as % pot
+- geometric percentage
+- hero bet in BB
+- villain call in BB
 - pot after call
 - remaining effective stack
 
 The last street must exhaust the effective stack (up to floating-point tolerance).
 
-### 6. Interactive 3D geometry map
-Use Plotly 3D.
-- X = SPR
-- Y = streets remaining
-- Z = geometric bet %
-- highlight the real ridges for 2 and 3 streets
-- plot anchor points with labels
-- allow rotate / pan / zoom
-- provide a slider to highlight a selected SPR and a 2-vs-3 street switch
-- explain what moving across the surface means
-
-The surface between 2 and 3 streets can be used as an educational interpolation, but label that only integer street counts are actual poker decisions.
+### 6. Interactive 3D stackoff scene
+The production `StackoffScene` uses Three.js to make the selected line's consequence tangible. It supports drag inspection, animates the remaining stack and live pot through the street gates, and pairs the scene with the explicit BB action schedule. A CSS fallback preserves the same instructional state when WebGL is unavailable.
 
 ### 7. SPACE KO tools preservation
 The existing app has useful bounty conversion / all-in equity utilities. Preserve these in a separate tab so they do not interfere with the geometry-memory loop. Treat the legacy bounty-pool assumption as approximate and label it as such.
@@ -168,15 +171,17 @@ Remove or repair the broken hand logger: the current file references `s_token` a
 
 ## Architecture
 
-Prefer a small pure-Python math module plus Streamlit UI.
+V5 keeps domain logic independently testable and the production UI thin:
 
-Suggested files:
-- `geometry.py`: pure formula, SPR calculation, schedule generation, nearest anchor
-- `streamlit_app.py`: application and session-state learning scheduler
-- `tests/test_geometry.py`: deterministic unit tests for all math
-- `requirements.txt`: Streamlit, Plotly, pandas, pytest if needed only for CI/dev
+- `src/core/geometry.ts`: geometric fraction, SPR, `% ↔ BB` conversions, and conserving street schedules.
+- `src/core/questions.ts`: deterministic generation plus representation-aware answer grading.
+- `src/App.tsx`: run lifecycle, latency capture, scoring, scheduler updates, and persistence orchestration.
+- `src/game/GameScreen.tsx`: Live Table unit interaction and compact dual-representation feedback.
+- `src/game/StackoffScene.tsx`: Three.js consequence playback plus the explicit street-by-street BB action HUD.
+- `src/screens/Academy.tsx`: permanently accessible How to Play and interactive formula explanation.
+- `src/core/__tests__/` and `tests/e2e/`: deterministic math/regression coverage and 390×844 / 1440×900 browser acceptance.
 
-Do not put core math only inside UI callbacks.
+Profile schema and concept IDs remain compatible, so V5 display and answer-unit additions do not reset existing mastery or history.
 
 ## Acceptance tests
 
@@ -188,9 +193,11 @@ At minimum verify:
 4. `pot=10, stack=40, streets=3` produces total hero contributions of 40bb and ends with 0bb remaining.
 5. Final pot for that case is 90bb: starting 10bb + two 40bb stacks.
 6. Invalid negative SPR / zero pot inputs are rejected cleanly.
-7. Streamlit app imports and starts without NameError.
-8. 3D Plotly visualization renders without requiring external data.
-9. Mobile layout does not depend on desktop hover.
+7. `13.4 BB × 54% = 7.236 BB`, and converting back yields `54%`.
+8. Equivalent `% POT` and `BB` Live Table answers cross the same grading boundary.
+9. Switching answer units does not reset committed-answer latency.
+10. Post-answer feedback exposes both representations and every street's pot, bet/call, and remaining stack.
+11. The production bundle builds and the browser flow passes without console errors or page overflow at 390×844 and 1440×900.
 
 ## Product standard
 

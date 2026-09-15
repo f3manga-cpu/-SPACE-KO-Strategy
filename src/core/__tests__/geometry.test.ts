@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   ANCHORS,
   analyseLine,
+  bbToPercent,
   geometricBetFraction,
   geometricBetPercent,
   nearestAnchor,
+  percentToBb,
   rootReactorStages,
   sprFromBetFraction,
   sprFromPotStack,
@@ -12,6 +14,12 @@ import {
 } from "../geometry";
 
 describe("geometric stack-off mathematics", () => {
+  it("keeps percent and BB as equivalent representations of one bet", () => {
+    const betBb = percentToBb(13.4, 54);
+    expect(betBb).toBeCloseTo(7.236, 12);
+    expect(bbToPercent(13.4, betBb)).toBeCloseTo(54, 12);
+  });
+
   it("matches the canonical exact landmarks", () => {
     expect(geometricBetPercent(1.5, 2)).toBeCloseTo(50, 10);
     expect(geometricBetPercent(4, 2)).toBeCloseTo(100, 10);
@@ -42,6 +50,34 @@ describe("geometric stack-off mathematics", () => {
         expect(schedule[index]?.potBefore).toBeCloseTo(schedule[index - 1]!.potAfterCall, 10);
       }
     }
+  });
+
+  it("unfolds the canonical SPR 4 three-street line in table units", () => {
+    const pot = 10;
+    const effectiveStack = 40;
+    const streets = 3;
+    const spr = sprFromPotStack(pot, effectiveStack);
+    const percent = geometricBetPercent(spr, streets);
+    const schedule = streetSchedule(pot, effectiveStack, streets);
+
+    expect(spr).toBe(4);
+    expect(percent).toBeCloseTo(54.0041911526, 8);
+    expect(schedule).toHaveLength(3);
+    expect(schedule[0]).toMatchObject({ streetIndex: 1, potBefore: 10 });
+    expect(schedule[0]!.betPercent).toBeCloseTo(percent, 10);
+    expect(schedule[0]!.heroBetBb).toBeCloseTo(5.4004191153, 9);
+    expect(schedule[0]!.villainCallBb).toBeCloseTo(5.4004191153, 9);
+    expect(schedule[0]!.potAfterCall).toBeCloseTo(20.8008382305, 9);
+    expect(schedule[0]!.stackRemaining).toBeCloseTo(34.5995808847, 9);
+    expect(schedule[1]!.potBefore).toBeCloseTo(20.8008382305, 9);
+    expect(schedule[1]!.heroBetBb).toBeCloseTo(11.2333244394, 9);
+    expect(schedule[1]!.potAfterCall).toBeCloseTo(43.2674871092, 9);
+    expect(schedule[1]!.stackRemaining).toBeCloseTo(23.3662564454, 9);
+    expect(schedule[2]!.potBefore).toBeCloseTo(43.2674871092, 9);
+    expect(schedule[2]!.heroBetBb).toBeCloseTo(23.3662564454, 9);
+    expect(schedule.reduce((total, street) => total + street.heroBetBb, 0)).toBeCloseTo(40, 9);
+    expect(schedule.at(-1)!.stackRemaining).toBeCloseTo(0, 9);
+    expect(schedule.at(-1)!.potAfterCall).toBeCloseTo(90, 9);
   });
 
   it("diagnoses under- and over-sized lines causally", () => {
@@ -75,6 +111,7 @@ describe("geometric stack-off mathematics", () => {
     expect(() => geometricBetFraction(Number.NaN, 2)).toThrow(RangeError);
     expect(() => sprFromPotStack(0, 20)).toThrow(RangeError);
     expect(() => sprFromPotStack(10, -1)).toThrow(RangeError);
+    expect(() => percentToBb(0, 54)).toThrow(RangeError);
+    expect(() => bbToPercent(13.4, -1)).toThrow(RangeError);
   });
 });
-

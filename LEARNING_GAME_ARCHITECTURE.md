@@ -6,7 +6,9 @@ This document turns research into product rules. It is an internal design contra
 
 The product is a competitive skill-training game. Its complete target loop is:
 
-> Observe table state → identify effective stack → compare it with pot → recognize SPR → recognize streets remaining → retrieve or infer geometric sizing → act immediately.
+> effective stack → pot → SPR → streets remaining → geometric % → actual BB action
+
+V5 ships through the root React/Vite path (`index.html` → `src/main.tsx` → `src/App.tsx`); GitHub Pages deploys `dist/`. `forge-game/` is a legacy frontend and is not the production application.
 
 The intended progression is:
 
@@ -41,9 +43,9 @@ Accuracy and durable transfer are the constraints. Speed, score, rank, spectacle
 | Targeted contrast | Make easily confused cases perceptually distinct | Discriminative contrast | Deliberately juxtapose SPR 4 over 3 streets (54%) with SPR 4 over 2 streets (pot), plus error-driven neighboring pairs. |
 | Guidance fading | Move from understanding to independent problem solving without overload | Worked-example fading / expertise reversal | Remove displayed SPR, anchor map, choices, formula steps, and extra time only after evidence supports removal. |
 | Desirable difficulty | Strengthen memory through effortful successful retrieval | Retrieval-effort account | Tighten distractors, tolerance, number complexity, contextual noise, and timing while maintaining a plausible path to success. |
-| Causal feedback | Correct the mental model, not just the selected number | Corrective feedback / simulation learning | Animate the whole line. Too small leaves visible river residue; too large exhausts the stack before the final gate. |
+| Causal feedback | Correct the mental model, not just the selected number | Corrective feedback / simulation learning | Animate the whole line in BB. At each street expose pot before, geometric %, hero bet, villain call, pot after call, and stack remaining. Too small leaves visible river residue; too large exhausts the stack before the final gate. |
 | Confidence sampling | Detect fragile knowledge, misconceptions, and miscalibration | Metacognitive monitoring | Occasionally ask Low / Medium / Locked after commitment and before feedback. Use the answer only for diagnosis and scheduling. |
-| Varied table transfer | Apply stable geometry under realistic surface variation | Transfer and variable-practice research | Replace supplied SPR with pot and effective stack, then add non-round numbers, board context, and appropriate time pressure. |
+| Varied table transfer | Apply stable geometry under realistic surface variation | Transfer and variable-practice research | Replace supplied SPR with pot and effective stack, then add non-round numbers, board context, and appropriate time pressure. Accept either `% POT` strategy or equivalent `BB` action. |
 | Accuracy-gated speed | Develop fast direct access without teaching impulsive guessing | Automaticity through repeated consistent retrieval | Unlock and weight speed only after unassisted accuracy and delayed retention. Use median latency rather than the fastest tap. |
 | Weakness repair | Concentrate effort on a specific improvable component | Deliberate-practice structure | Isolate a weakness briefly, provide specific feedback, reinsert it into mixed play, and schedule a delayed return. |
 | Durable mastery states | Prevent short-term fluency from masquerading as mastery | Mastery learning plus spaced relearning | Later mastery bands require independent, delayed, and contextual success; attempts or XP alone never qualify. |
@@ -79,13 +81,23 @@ Each facility exists because it trains a distinct cognitive operation.
 | Ratio Chamber / SPR Snap | Pot and effective stack → approximate SPR. Begin with separated ratio zones; later use neighboring and non-round values. Measure magnitude of estimation error. |
 | Runway Forge | SPR + streets remaining → qualitative aggression, then exact sizing. Animated street gates make remaining runway spatially meaningful. |
 | Anchor Grid / Anchor Forge | Direct retrieval of the ten mappings. Move quickly from minimal acquisition to production and interleave both paths. Perfect Ten is ten anchors, sudden death, with time valid only on a perfect run. |
-| Stackoff Machine | Predict and watch a full simplified bet/call line. Correct geometry converges; under-sizing leaves residue; over-sizing exhausts early. Compare `YOUR LINE` with `GEOMETRIC LINE` at every gate. |
-| Root Reactor | Reconstruct arbitrary sizing through DOUBLE → ADD ONE → ROOT → MINUS ONE → HALF. Fade ordered manipulation to a missing step, full reconstruction, then numeric production. |
+| Stackoff Machine | Predict and watch a full simplified bet/call line in table units. Correct geometry converges; under-sizing leaves residue; over-sizing exhausts early. Compare `YOUR LINE` with `GEOMETRIC LINE` and expose each bet/call consequence at every gate. |
+| Root Reactor | Reconstruction and understanding: rebuild arbitrary percentage sizing through DOUBLE → ADD ONE → square root for two streets or cube root for three → MINUS ONE → HALF. Fade ordered manipulation to a missing step, full reconstruction, then numeric production. |
 | Ghost Line | Infer hidden SPR/street/sizing from a trajectory, training inverse understanding from silhouettes and pot-growth rhythm before labels. |
 | Contrast Duel | Rapidly discriminate error-derived confusable pairs. Its iconic gate is SPR 4: 54% across three streets versus pot across two. |
-| Table Zero | Flagship integration of stack reading, pot comparison, SPR estimation, streets, recall, and direct bet action. Information lives in-world; assistance fades. Transfer Gauntlet removes SPR labels; Precision narrows tolerance on arbitrary SPRs. |
+| Table Zero / Live Table | Contextual execution: integrate stack reading, pot comparison, SPR estimation, streets, percentage recall, and actual BB action. The player commits once in either `% POT` or `BB`; both represent one bet. Information lives in-world; assistance fades. |
 | Reflex Rush / Stackoff Survival | Accuracy-gated automatic execution and context switching. Errors reduce momentum; an explicit critical-error allowance ends Survival with a repair diagnosis. |
 | Memory Return / Weakness Hunt | Memory Return serves only due concepts. Weakness Hunt targets a fragile operation, ends in mixed retrieval, and creates a future review. Both are first-class missions, not shame states. |
+| Forge Academy / How to Play | Permanently accessible, interactive orientation: mission, six-link mental pipeline, anchor ladders, facility roles, semantic Root Reactor proof, and latency meaning. It teaches without interrupting rapid replay. |
+
+### V5 representation and timing contract
+
+- **Anchor Forge remains percentage-only.** Its ten rounded landmarks and established accepted-answer semantics are unchanged.
+- **Root Reactor produces the strategy fraction.** It teaches `(1 + 2b)^n = 1 + 2SPR` and why each operation exists.
+- **Table Zero connects strategy to execution.** `% POT` and `BB` are interchangeable representations of one action; neither requires a second answer.
+- A BB commitment is normalized with `submittedPct = submittedBB / pot × 100`, then evaluated with the question's existing percentage-point tolerance. There is no BB-specific tolerance or score multiplier.
+- Latency begins when the actionable table state appears and ends on commit. Switching `% POT ↔ BB` is part of that decision interval and never restarts the clock.
+- Existing concept IDs, scheduler evidence, mastery, rank, history, and records remain valid across the V5 upgrade.
 
 ## Scheduler contract
 

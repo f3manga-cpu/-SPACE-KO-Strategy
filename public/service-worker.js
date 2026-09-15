@@ -1,4 +1,4 @@
-const CACHE = 'reflex-forge-v4';
+const CACHE = 'reflex-forge-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {

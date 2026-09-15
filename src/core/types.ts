@@ -61,6 +61,7 @@ export type MasteryBand =
 export type AnswerValue = number | string;
 export type ResponseMode = "numeric" | "choice" | "qualitative" | "sequence";
 export type AnswerUnit = "percent" | "spr" | "bb" | "category" | "sequence" | "none";
+export type LiveTableAnswerUnit = "percent" | "bb";
 
 export interface QuestionChoice {
   id: string;
@@ -71,6 +72,10 @@ export interface QuestionChoice {
 export interface LinePoint {
   streetIndex: number;
   potBefore: number;
+  betPercent: number;
+  heroBetBb: number;
+  villainCallBb: number;
+  /** @deprecated Prefer heroBetBb when labelling the action in new UI. */
   bet: number;
   potAfterCall: number;
   stackRemaining: number;
@@ -121,6 +126,7 @@ export interface Question {
   expectedAnswer: AnswerValue;
   tolerance: number;
   unit: AnswerUnit;
+  acceptedUnits?: readonly LiveTableAnswerUnit[];
   choices?: QuestionChoice[];
   context: QuestionContext;
   explanation: string;

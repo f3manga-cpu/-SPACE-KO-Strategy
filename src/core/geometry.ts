@@ -62,12 +62,27 @@ export function sprFromPotStack(pot: number, effectiveStack: number): number {
   return effectiveStack / pot;
 }
 
-export function betAmount(pot: number, percent: number): number {
+/** Convert a strategic percentage-of-pot sizing into its table action in BB. */
+export function percentToBb(pot: number, percent: number): number {
   assertFinite(pot, "pot");
   assertFinite(percent, "percent");
   if (pot <= 0) throw new RangeError("pot must be greater than zero");
   if (percent < 0) throw new RangeError("percent must be non-negative");
   return pot * (percent / 100);
+}
+
+/** Convert a table action in BB back into the strategic percentage of pot. */
+export function bbToPercent(pot: number, betBb: number): number {
+  assertFinite(pot, "pot");
+  assertFinite(betBb, "bet");
+  if (pot <= 0) throw new RangeError("pot must be greater than zero");
+  if (betBb < 0) throw new RangeError("bet must be non-negative");
+  return (betBb / pot) * 100;
+}
+
+/** Backwards-compatible name retained for existing consumers. */
+export function betAmount(pot: number, percent: number): number {
+  return percentToBb(pot, percent);
 }
 
 /**
@@ -100,6 +115,9 @@ export function streetScheduleForFraction(
     schedule.push({
       streetIndex,
       potBefore: currentPot,
+      betPercent: fraction * 100,
+      heroBetBb: bet,
+      villainCallBb: bet,
       bet,
       potAfterCall,
       stackRemaining: remaining,
