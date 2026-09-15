@@ -2,71 +2,24 @@ name: Verify Reflex Forge
 
 on:
   pull_request:
-    paths:
-      - 'site/**'
-      - '.github/workflows/site-verify.yml'
   push:
     branches: [main]
-    paths:
-      - 'site/**'
-      - '.github/workflows/site-verify.yml'
 
 jobs:
-  browser-smoke:
+  browser-and-engine:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: JavaScript syntax
-        run: node --check site/app.js
-      - name: Install Playwright
-        run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
-      - name: Serve app
-        run: |
-          python3 -m http.server 8765 --directory site >/tmp/reflex-http.log 2>&1 &
-          echo $! > /tmp/reflex-http.pid
-          sleep 2
-          curl --fail http://127.0.0.1:8765/
-      - name: Mobile browser acceptance test
-        run: |
-          node <<'JS'
-          const { chromium } = require('playwright');
-          (async()=>{
-            const browser=await chromium.launch({headless:true});
-            const page=await browser.newPage({viewport:{width:390,height:844}});
-            const errors=[];
-            page.on('console',m=>{if(m.type()==='error') errors.push(m.text())});
-            await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-            if((await page.locator('#prompt').innerText())!=='SPR 4 · 3 streets') throw new Error('unexpected initial anchor');
-            await page.getByRole('button',{name:'54%'}).click();
-            await page.waitForTimeout(250);
-            if(!(await page.locator('#feedback').innerText()).includes('Correct')) throw new Error('correct-answer feedback failed');
-            if((await page.locator('#streak').innerText())!=='1') throw new Error('streak reinforcement failed');
-            if(!(await page.locator('#rewardLayer').innerText()).trim()) throw new Error('reward visualization missing');
-            await page.waitForTimeout(1900);
-            await page.reload({waitUntil:'networkidle'});
-            const widths=await page.locator('.mastery-track div').evaluateAll(els=>els.map(e=>e.getAttribute('style')||''));
-            if(!widths.some(x=>x.includes('20%'))) throw new Error('mastery persistence failed');
-            const pot=parseFloat(await page.locator('#tPot').innerText());
-            const stack=parseFloat(await page.locator('#tStack').innerText());
-            const n=parseInt((await page.locator('#tStreet').innerText()).match(/(2|3) streets/)[1],10);
-            const spr=stack/pot;
-            const target=100*((Math.pow(1+2*spr,1/n)-1)/2);
-            await page.locator('#sprGuess').fill(spr.toFixed(2));
-            await page.locator('#sizeGuess').fill(target.toFixed(0));
-            await page.getByRole('button',{name:'Commit decision'}).click();
-            await page.waitForTimeout(150);
-            if(!(await page.locator('#transferFeedback').innerText()).includes('Table-ready')) throw new Error('transfer workflow failed');
-            await page.locator('#formulaSequence button').first().click();
-            if(!(await page.locator('#formulaExplanation').innerText()).includes('DOUBLE S')) throw new Error('meaning reconstruction failed');
-            const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
-            if(overflow>1) throw new Error(`mobile horizontal overflow: ${overflow}px`);
-            if(errors.length) throw new Error(`console errors: ${errors.join(' | ')}`);
-            await browser.close();
-            console.log('390px mobile acceptance test passed');
-          })().catch(e=>{console.error(e);process.exit(1)});
-          JS
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Unit, deterministic engine, and production build
+        run: npm run check
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Mobile and desktop acceptance
+        run: npm run test:e2e

@@ -1,0 +1,10 @@
+{
+  "name": "Geometry Reflex Forge",
+  "short_name": "Reflex Forge",
+  "description": "Competitive geometric poker bet-sizing reflex training.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#05090f",
+  "theme_color": "#05090f",
+  "icons": [{ "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
