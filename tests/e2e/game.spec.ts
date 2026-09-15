@@ -137,9 +137,12 @@ test('retrieval, causal error feedback, root reconstruction and 3D transfer all 
   const expectedBb = pot * ((Math.pow(1 + 2 * stack / pot, 1 / streets) - 1) / 2);
   const choiceButtons = page.locator('.answer-bank button');
   if (await choiceButtons.count()) {
-    const labels = await choiceButtons.allTextContents();
+    const labels = await choiceButtons.locator('strong').allTextContents();
     const selected = labels.map((label, index) => ({ index, delta: Math.abs(Number(label.replace(/[^0-9.]/g, '')) - expectedBb) })).sort((a, b) => a.delta - b.delta)[0]!;
-    await choiceButtons.nth(selected.index).click({ force: true });
+    expect(selected.delta).toBeLessThanOrEqual(0.11);
+    const selectedButton = choiceButtons.nth(selected.index);
+    await selectedButton.click({ force: true });
+    await expect(selectedButton).toHaveClass(/selected/);
   } else {
     await page.getByLabel('Bet amount in big blinds').evaluate((element, amount) => {
       const input = element as HTMLInputElement;
