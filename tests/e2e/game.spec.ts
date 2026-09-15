@@ -62,7 +62,7 @@ async function answerCurrentAnchor(page: Page, correct = true) {
   const target = anchorAnswer(prompt);
   const choiceButtons = page.locator('.answer-bank button');
   if (await choiceButtons.count()) {
-    const labels = await choiceButtons.allTextContents();
+    const labels = await choiceButtons.locator('strong').allTextContents();
     const chosen = correct ? labels.findIndex((label) => label.includes(String(target))) : labels.findIndex((label) => !label.includes(String(target)));
     await choiceButtons.nth(Math.max(0, chosen)).click({ force: true });
   } else {
